@@ -62,6 +62,10 @@ class Terminal:
         """Display the list of shells"""
         return "Shells:\n" + "\n".join(["- " + name for name in self.shells])
 
+    def repr(self):  # Hack to allow for shell.repr()
+        """Display the list of shells"""
+        return self.__repr__()
+
     def create_shell(self, name: Optional[str] = None):
         """Create a new shell"""
         shell = Shell()
@@ -109,7 +113,9 @@ class File:
 
 agent = Autochat(
     """You are an agent, which leverage tools to help you complete tasks.
-    Don't answer user query, but use tools to complete the task."""
+    When you generate shells, you will have the ability to run commands in them.
+    Don't answer user query, but use tools to complete the task.""",
+    provider="openai",
 )
 terminal = Terminal()
 agent.add_tool(terminal)
