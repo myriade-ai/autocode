@@ -1,3 +1,4 @@
+from typing import Optional
 import os
 from autochat import Autochat
 
@@ -55,20 +56,28 @@ class Terminal:
 
     def __init__(self):
         """Initialize with empty history"""
-        self.shells = []
+        self.shells = {}
 
     def __repr__(self):
-        """Display the command history and their outputs"""
-        return "\n".join([str(t) for t in self.shells])
+        """Display the list of shells"""
+        return "Shells:\n" + "\n".join(["- " + name for name in self.shells])
 
-    def create_shell(self):
+    def create_shell(self, name: Optional[str] = None):
         """Create a new shell"""
-        self.shells.append(Shell())
-        return self.shells[-1]
+        shell = Shell()
+        if name is None:
+            # Use the shell's id as the name by default
+            name = str(id(shell))
+        if name in self.shells:
+            raise ValueError(f"Shell {name} already exists")
+        self.shells[name] = shell
+        return self.shells[name]
 
-    def close_shell(self, shell):
-        """Close a shell"""
-        self.shells.remove(shell)
+    def close_shell(self, name: str):
+        """Close a shell by its name"""
+        if name not in self.shells:
+            raise ValueError(f"Shell {name} does not exist")
+        del self.shells[name]
 
 
 class File:
