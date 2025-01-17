@@ -66,6 +66,7 @@ class Terminal:
         """Display the list of shells"""
         return self.__repr__()
 
+    # TODO: should always use id as the name ?
     def create_shell(self, name: Optional[str] = None):
         """Create a new shell"""
         shell = Shell()
@@ -115,7 +116,7 @@ agent = Autochat(
     """You are an agent, which leverage tools to help you complete tasks.
     When you generate shells, you will have the ability to run commands in them.
     Don't answer user query, but use tools to complete the task.""",
-    provider="openai",
+    provider="anthropic",
 )
 terminal = Terminal()
 agent.add_tool(terminal)
@@ -125,9 +126,20 @@ agent.add_tool(terminal)
 if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) > 1:
-        prompt = " ".join(sys.argv[1:])
-        for message in agent.run_conversation(prompt):
-            print(message.to_markdown())
-    else:
-        print("Please provide a prompt as command line argument")
+    while True:
+        try:
+            if len(sys.argv) > 1:
+                prompt = " ".join(sys.argv[1:])
+            else:
+                prompt = input("Enter your prompt (Ctrl+C to exit): ")
+
+            if not prompt.strip():
+                print("Please provide a prompt")
+                continue
+
+            for message in agent.run_conversation(prompt):
+                print(message.to_markdown())
+
+        except KeyboardInterrupt:
+            print("\nExiting...")
+            break
