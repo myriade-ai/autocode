@@ -57,7 +57,6 @@ class Terminal:
     def __init__(self):
         """Initialize with empty history"""
         self.shells = {}
-        self.insights = []
 
     def __repr__(self):
         """Display the list of shells"""
@@ -67,7 +66,6 @@ class Terminal:
         """Display the list of shells"""
         return self.__repr__()
 
-    # TODO: should always use id as the name ?
     def create_shell(self, name: Optional[str] = None):
         """Create a new shell"""
         shell = Shell()
@@ -84,15 +82,6 @@ class Terminal:
         if name not in self.shells:
             raise ValueError(f"Shell {name} does not exist")
         del self.shells[name]
-
-    def store_insight(self, insight: str):
-        """Store an insight or instruction"""
-        self.insights.append(insight)
-        print(f"Insight stored: {insight}")
-
-    def get_insights(self):
-        """Retrieve all stored insights"""
-        return self.insights
 
 
 class File:
@@ -122,7 +111,28 @@ class File:
         os.remove(self.path)
 
 
-agent = Autochat(
+class InsightfulAutochat(Autochat):
+    """Extension of Autochat that can store and retrieve insights."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.insights_file = "insights.txt"
+
+    def store_insight(self, insight: str):
+        """Store an insight or instruction in a text file"""
+        with open(self.insights_file, "a") as f:
+            f.write(insight + "\n")
+        print(f"Insight stored: {insight}")
+
+    def get_insights(self):
+        """Retrieve all stored insights from the text file"""
+        try:
+            with open(self.insights_file, "r") as f:
+                return f.read().splitlines()
+        except FileNotFoundError:
+            return []
+
+agent = InsightfulAutochat(
     """You are an agent, which leverage tools to help you complete tasks.
     When you generate shells, you will have the ability to run commands in them.
     Don't answer user query, but use tools to complete the task.""",
