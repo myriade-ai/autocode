@@ -1,19 +1,11 @@
-import os
-
-
-# Get the context of files/folders present
-def list_directory_contents(path="."):
-    return os.listdir(path)
-
-
-# Assuming run.py CLI logic is defined here
-def run_cli_logic():
-    # Placeholder for existing run.py CLI logic
-    pass
-
+from run import Shell, Terminal, File, agent, terminal
 
 if __name__ == "__main__":
-    # Print the context
-    print("Context of current directory:", list_directory_contents())
-    # Execute CLI logic
-    run_cli_logic()
+    import sys
+
+    if len(sys.argv) > 1:
+        prompt = " ".join(sys.argv[1:])
+        for message in agent.run_conversation(prompt):
+            print(message.to_markdown())
+    else:
+        print("Please provide a prompt as command line argument")
