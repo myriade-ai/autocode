@@ -1,3 +1,8 @@
+import json
+import subprocess
+import tempfile
+
+
 class CodeEditor:
     def __init__(self):
         self.files = {}
@@ -20,11 +25,8 @@ class CodeEditor:
 
         return "\n".join(display)
 
-    def apply_diff(self, diff_text: str) -> str:
+    def apply_diff(self, diff_text: str):
         """Apply a diff to the file and return the new content and affected lines."""
-        import subprocess
-        import tempfile
-        import os
 
         # FIX: diff_text should end with a newline
         if not diff_text.endswith("\n"):
@@ -34,6 +36,8 @@ class CodeEditor:
             diff_file = f.name
             f.write(diff_text)
 
+        print("diff_file", diff_file)
+        # TODO: it's not perfect because it won't work for non git files
         # Apply the patch using git
         try:
             subprocess.run(
@@ -44,22 +48,45 @@ class CodeEditor:
                 ],
                 check=True,
             )
+        except Exception as e:
+            print(f"Error applying diff: {e}")
+            raise e
         finally:
             # Clean up temporary files
-            os.unlink(diff_file)
+            # os.unlink(diff_file)
+            pass
 
+        # Apply linter after applying the diff
+        self.apply_linter()
 
-if __name__ == "__main__":
-    editor = CodeEditor()
-    print(editor.read_file("example.py"))
+    def apply_linter(self):
+        """Apply linter based on .vscode/settings.json"""
+        try:
+            with open(".vscode/settings.json", "r") as f:
+                settings = json.load(f)
+        except FileNotFoundError:
+            print(".vscode/settings.json not found")
+            return
+        except json.JSONDecodeError:
+            print("Error decoding .vscode/settings.json")
+            return
 
-    diff = """--- example.py
-+++ example.py
-@@ -1,2 +1,2 @@
- def hello():
--    print("Hello, World!")
-+    print("Hello, Ben!"))
+        # Check for Python-related settings
+        python_settings = settings.get("python", {})
 
-"""
-    editor.apply_diff(diff)
-    print(editor.read_file("example.py"))
+        # Apply linter settings
+        linter = python_settings.get("linting", {}).get("pylintEnabled", False)
+        if linter:
+            print("Applying Pylint")
+            pylint_command = "pylint ."
+            try:
+                subprocess.run(pylint_command, shell=True, check=True)
+                print("Pylint applied successfully")
+            except subprocess.CalledProcessError:
+                print("Error applying Pylint")
+
+        # Check for Ruff settings
+        ruff_settings = settings.get("ruff", {})
+        if ruff_settings:
+            print("Ruff settings found, but not implemented yet")
+            # TODO: Implement Ruff linting based on settings
