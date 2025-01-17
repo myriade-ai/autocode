@@ -57,6 +57,7 @@ class Terminal:
     def __init__(self):
         """Initialize with empty history"""
         self.shells = {}
+        self.insights = []
 
     def __repr__(self):
         """Display the list of shells"""
@@ -83,6 +84,15 @@ class Terminal:
         if name not in self.shells:
             raise ValueError(f"Shell {name} does not exist")
         del self.shells[name]
+
+    def store_insight(self, insight: str):
+        """Store an insight or instruction"""
+        self.insights.append(insight)
+        print(f"Insight stored: {insight}")
+
+    def get_insights(self):
+        """Retrieve all stored insights"""
+        return self.insights
 
 
 class File:
@@ -143,3 +153,5 @@ if __name__ == "__main__":
         except KeyboardInterrupt:
             print("\nExiting...")
             break
+        except Exception as e:
+            print(f"An error occurred: {e}")
