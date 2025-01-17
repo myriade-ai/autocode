@@ -114,32 +114,54 @@ class File:
 class InsightfulAutochat(Autochat):
     """Extension of Autochat that can store and retrieve insights."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, instructions, *args, **kwargs):
+        super().__init__(instructions, *args, **kwargs)
         self.insights_file = "insights.txt"
+        self.insights = self._load_insights()
+        self._update_instructions()
 
-    def store_insight(self, insight: str):
-        """Store an insight or instruction in a text file"""
-        with open(self.insights_file, "a") as f:
-            f.write(insight + "\n")
-        print(f"Insight stored: {insight}")
-
-    def get_insights(self):
-        """Retrieve all stored insights from the text file"""
+    def _load_insights(self):
+        """Load insights from the file"""
         try:
             with open(self.insights_file, "r") as f:
                 return f.read().splitlines()
         except FileNotFoundError:
             return []
 
-agent = InsightfulAutochat(
-    """You are an agent, which leverage tools to help you complete tasks.
-    When you generate shells, you will have the ability to run commands in them.
-    Don't answer user query, but use tools to complete the task.""",
-    provider="anthropic",
-)
+    def _update_instructions(self):
+        """Update the instructions with the loaded insights"""
+        insights_text = "\n".join(self.insights)
+        self.instructions += f"\n\nInsights and Feedback:\n{insights_text}"
+
+    def store_insight(self, insight: str):
+        """Store an insight or instruction in a text file and update instructions"""
+        with open(self.insights_file, "a") as f:
+            f.write(insight + "\n")
+        self.insights.append(insight)
+        self._update_instructions()
+        print(f"Insight stored and instructions updated: {insight}")
+
+    def get_insights(self):
+        """Retrieve all stored insights"""
+        return self.insights
+
+
+def store_insight(insight: str):
+    """Function for the agent to store insights"""
+    agent.store_insight(insight)
+    return "Insight stored successfully"
+
+
+# Initialize the agent with basic instructions
+initial_instructions = """You are an agent, which leverage tools to help you complete tasks.
+When you generate shells, you will have the ability to run commands in them.
+Don't answer user query, but use tools to complete the task.
+You can use the store_insight function to store important insights or feedback for future reference."""
+
+agent = InsightfulAutochat(initial_instructions, provider="anthropic")
 terminal = Terminal()
 agent.add_tool(terminal)
+agent.add_tool(store_insight)
 # agent.add_tool(File)
 
 
