@@ -2,6 +2,8 @@ from typing import Optional
 import os
 from autochat import Autochat
 import datetime
+from code_editor import CodeEditor
+
 
 class Shell:
     """Interact with the terminal by running commands and storing history."""
@@ -156,6 +158,8 @@ Don't answer user query, but use tools to complete the task."""
 agent = InsightfulAutochat(initial_instructions, provider="anthropic")
 terminal = Terminal()
 agent.add_tool(terminal)
+code_editor = CodeEditor()
+agent.add_tool(code_editor)
 # agent.add_tool(File)
 
 
