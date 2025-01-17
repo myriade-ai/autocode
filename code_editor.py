@@ -27,7 +27,6 @@ class CodeEditor:
 
     def apply_diff(self, diff_text: str):
         """Apply a diff to the file and return the new content and affected lines."""
-
         # FIX: diff_text should end with a newline
         if not diff_text.endswith("\n"):
             diff_text += "\n"
@@ -36,21 +35,22 @@ class CodeEditor:
             diff_file = f.name
             f.write(diff_text)
 
-        print("diff_file", diff_file)
+        # print("git diff", diff_file)
         # TODO: it's not perfect because it won't work for non git files
         # Apply the patch using git
         try:
-            subprocess.run(
+            result = subprocess.run(
                 [
                     "git",
                     "apply",
                     diff_file,
                 ],
                 check=True,
+                capture_output=True,
+                text=True,
             )
-        except Exception as e:
-            print(f"Error applying diff: {e}")
-            raise e
+        except subprocess.CalledProcessError as e:
+            return e.stderr
         finally:
             # Clean up temporary files
             # os.unlink(diff_file)
@@ -58,6 +58,7 @@ class CodeEditor:
 
         # Apply linter after applying the diff
         self.apply_linter()
+        return result.stdout
 
     def apply_linter(self):
         """Apply linter based on .vscode/settings.json"""
