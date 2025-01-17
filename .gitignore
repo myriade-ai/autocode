@@ -1,0 +1,16 @@
+# Python virtual environment
+.venv/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# macOS system files
+.DS_Store
+
+# Backup files
+*.bak
+
+# Local TODO file (assuming it's for personal use)
+TODO.md
+

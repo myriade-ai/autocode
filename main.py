@@ -1,7 +1,7 @@
 from typing import Optional
 import os
 from autochat import Autochat
-
+import datetime
 
 class Shell:
     """Interact with the terminal by running commands and storing history."""
@@ -16,8 +16,8 @@ class Shell:
             return "No commands executed yet"
 
         output = []
-        for command, result in self.history[-20:]:
-            output.append(f"$ {command}")
+        for timestamp, command, result in self.history[-20:]:
+            output.append(f"{timestamp} $ {command}")
             if result:
                 if len(result) > 2000:
                     result = result[:2000] + "\n...\n"
@@ -40,15 +40,16 @@ class Shell:
     def run_command(self, command):
         import subprocess
 
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
             result = subprocess.run(command, shell=True, capture_output=True, text=True)
             output = result.stdout if result.stdout else result.stderr
-            self.history.append((command, output))
-            return output
+            self.history.append((timestamp, command, output))
+            return f"{timestamp} $ {command}\n{output}"
         except Exception as e:
             error_msg = str(e)
-            self.history.append((command, error_msg))
-            return error_msg
+            self.history.append((timestamp, command, error_msg))
+            return f"{timestamp} $ {command}\n{error_msg}"
 
 
 class Terminal:
