@@ -1,6 +1,6 @@
 import os
 from .directory_utils import list_non_gitignore_files
-
+from .code_editor_utils import apply_linter
 
 def read_file(filename: str, start_line: int = 1, end_line: int = None) -> str:
     """Read a file with line numbers."""
@@ -14,12 +14,11 @@ def read_file(filename: str, start_line: int = 1, end_line: int = None) -> str:
         display.append(f"{str(i).rjust(width)} | {line}")
     return "\n".join(display)
 
-
 def write_file(filename: str, content: str):
     """Write the entire content to a file."""
     with open(filename, "w") as f:
         f.write(content)
-
+    apply_linter()
 
 def edit_file(
     filename: str,
@@ -37,14 +36,17 @@ def edit_file(
     line_index_start -= 1
     line_index_end = line_index_start + delete_lines_count
 
-    del lines[line_index_start:line_index_end]
-    lines.insert(line_index_start, insert_text)
+    new_lines = lines[:line_index_start] + [insert_text] + lines[line_index_end:]
+    new_content = "\n".join(new_lines)
 
+    # Write the changes to the file
     with open(filename, "w") as f:
-        f.write("\n".join(lines))
+        f.write(new_content)
 
-    return "\n".join(lines)
+    # Apply linter after editing the file
+    apply_linter()
 
+    return new_content
 
 class CodeEditor:
     def __init__(self, directory: str = "."):

@@ -39,6 +39,10 @@ General Reminders
 
 Your primary objective is to utilize tools/functions to fulfill the user's requests, not to provide direct answers or explanations.
 Always verify that your actions and outputs align with user instructions and requests.
+
+---
+### Project Description
+This project implements an AI agent equipped with a code editor and terminal capabilities, allowing it to perform coding tasks and execute shell commands.
 """
 
 agent = Autochat(instruction, provider="anthropic")
