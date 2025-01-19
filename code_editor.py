@@ -25,6 +25,11 @@ class CodeEditor:
 
         return "\n".join(display)
 
+    def write_file(self, filename: str, content: str):
+        """Write to a file. The content should be the whole file content."""
+        with open(filename, "w") as file:
+            file.write(content)
+
     def apply_diff(self, diff_text: str):
         """Apply a diff to the file and return the new content and affected lines."""
         # FIX: diff_text should end with a newline
@@ -57,37 +62,38 @@ class CodeEditor:
             pass
 
         # Apply linter after applying the diff
-        self.apply_linter()
+        # apply_linter() # TODO: fix
         return result.stdout
 
-    def apply_linter(self):
-        """Apply linter based on .vscode/settings.json"""
+
+def apply_linter():
+    """Apply linter based on .vscode/settings.json"""
+    try:
+        with open(".vscode/settings.json", "r") as f:
+            settings = json.load(f)
+    except FileNotFoundError:
+        print(".vscode/settings.json not found")
+        return
+    except json.JSONDecodeError:
+        print("Error decoding .vscode/settings.json")
+        return
+
+    # Check for Python-related settings
+    python_settings = settings.get("python", {})
+
+    # Apply linter settings
+    linter = python_settings.get("linting", {}).get("pylintEnabled", False)
+    if linter:
+        print("Applying Pylint")
+        pylint_command = "pylint ."
         try:
-            with open(".vscode/settings.json", "r") as f:
-                settings = json.load(f)
-        except FileNotFoundError:
-            print(".vscode/settings.json not found")
-            return
-        except json.JSONDecodeError:
-            print("Error decoding .vscode/settings.json")
-            return
+            subprocess.run(pylint_command, shell=True, check=True)
+            print("Pylint applied successfully")
+        except subprocess.CalledProcessError:
+            print("Error applying Pylint")
 
-        # Check for Python-related settings
-        python_settings = settings.get("python", {})
-
-        # Apply linter settings
-        linter = python_settings.get("linting", {}).get("pylintEnabled", False)
-        if linter:
-            print("Applying Pylint")
-            pylint_command = "pylint ."
-            try:
-                subprocess.run(pylint_command, shell=True, check=True)
-                print("Pylint applied successfully")
-            except subprocess.CalledProcessError:
-                print("Error applying Pylint")
-
-        # Check for Ruff settings
-        ruff_settings = settings.get("ruff", {})
-        if ruff_settings:
-            print("Ruff settings found, but not implemented yet")
-            # TODO: Implement Ruff linting based on settings
+    # Check for Ruff settings
+    ruff_settings = settings.get("ruff", {})
+    if ruff_settings:
+        print("Ruff settings found, but not implemented yet")
+        # TODO: Implement Ruff linting based on settings
