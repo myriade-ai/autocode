@@ -27,28 +27,34 @@ def _read_gitignore(gitignore_path: str) -> list:
 
 
 def list_non_gitignore_files(directory: str = ".") -> list:
-    """List all files in the directory, excluding those in .gitignore."""
-    directory_path = Path(directory)
-    gitignore_path = directory_path / ".gitignore"
+    """List all files in the directory, excluding those in .gitignore, .git/, and .gitignore files themselves."""
+    directory_path = Path(directory).resolve()
 
-    # 1. Read .gitignore patterns
-    ignored_patterns = _read_gitignore(str(gitignore_path))
+    def should_ignore(file_path: Path, gitignore_patterns: dict) -> bool:
+        for parent in file_path.parents:
+            parent_patterns = gitignore_patterns.get(str(parent), [])
+            rel_path = file_path.relative_to(parent).as_posix()
+            for pattern in parent_patterns:
+                if fnmatch(rel_path, pattern) or rel_path.startswith(".git/"):
+                    return True
+        return False
 
-    # 2. Collect all files under the directory
+    # Collect all .gitignore files and their patterns
+    gitignore_patterns = {}
+    for gitignore_file in directory_path.rglob(".gitignore"):
+        patterns = _read_gitignore(str(gitignore_file))
+        gitignore_patterns[str(gitignore_file.parent)] = patterns
+
+    # Add .git/ to ignored patterns for the root directory
+    root_patterns = gitignore_patterns.get(str(directory_path), [])
+    root_patterns.extend([".git/", "**/.git/"])
+    gitignore_patterns[str(directory_path)] = root_patterns
+
+    # Collect all files under the directory
     files = []
-    for file_path in Path(directory).rglob("*"):
-        if file_path.is_file() and not file_path.name.startswith("."):
-            # Convert to relative path in posix format for pattern matching
-            rel_path = file_path.relative_to(directory_path).as_posix()
-
-            # Check if file should be ignored
-            should_ignore = False
-            for pattern in ignored_patterns:
-                if fnmatch(rel_path, pattern):
-                    should_ignore = True
-                    break
-
-            if not should_ignore:
+    for file_path in directory_path.rglob("*"):
+        if file_path.is_file():
+            if not should_ignore(file_path, gitignore_patterns):
                 files.append(str(file_path))
 
     return files
