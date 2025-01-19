@@ -1,7 +1,3 @@
-from .code_editor import CodeEditor
-from .terminal import Terminal
-
-__all__ = [
-    "CodeEditor",
-    "Terminal",
-]
+from .code_editor import *
+from .code_editor_utils import *
+from .terminal import *
