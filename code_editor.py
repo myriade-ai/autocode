@@ -1,8 +1,7 @@
 import json
 import subprocess
-import tempfile
-
 from pathlib import Path
+
 
 class CodeEditor:
     def __init__(self):
@@ -31,52 +30,40 @@ class CodeEditor:
         with open(filename, "w") as file:
             file.write(content)
 
-    def apply_diff(self, diff_text: str):
-        """Apply a diff to the file and return the new content and affected lines."""
-        # FIX: diff_text should end with a newline
-        if not diff_text.endswith("\n"):
-            diff_text += "\n"
+    def edit_file(
+        self,
+        filename: str,
+        delete_line_start: int,
+        delete_line_end: int,
+        insert_text: str,
+    ):
+        """Edit a file by deleting a range of lines and inserting text at a specific line."""
+        with open(filename, "r") as file:
+            lines = file.read().splitlines()
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".patch", delete=False) as f:
-            diff_file = f.name
-            f.write(diff_text)
+        # Delete the lines
+        del lines[delete_line_start:delete_line_end]
 
-        # print("git diff", diff_file)
-        # TODO: it's not perfect because it won't work for non git files
-        # Apply the patch using git
-        try:
-            result = subprocess.run(
-                [
-                    "git",
-                    "apply",
-                    diff_file,
-                ],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-        except subprocess.CalledProcessError as e:
-            return e.stderr
-        finally:
-            # Clean up temporary files
-            # os.unlink(diff_file)
-            pass
+        # Insert the text at the specific line
+        lines.insert(delete_line_start, insert_text)
 
-        # Apply linter after applying the diff
-        # apply_linter() # TODO: fix
-        return result.stdout
+        with open(filename, "w") as file:
+            file.write("\n".join(lines))
 
-    def search_files(self, search_text: str, directory: str = '.') -> list:
+        # TODO: apply linter
+        return "\n".join(lines)
+
+    def search_files(self, search_text: str, directory: str = ".") -> list:
         """
         Search recursively in the provided directory (default current directory)
         for files containing the specified search_text.
         Returns the list of file paths that contain the text.
         """
         files_found = []
-        for path in Path(directory).rglob('*'):
+        for path in Path(directory).rglob("*"):
             if path.is_file():
                 try:
-                    with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                    with open(path, "r", encoding="utf-8", errors="ignore") as f:
                         content = f.read()
                         if search_text in content:
                             files_found.append(str(path))
