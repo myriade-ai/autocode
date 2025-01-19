@@ -1,0 +1,72 @@
+import json
+import subprocess
+import tempfile
+
+
+def apply_diff(diff_text: str):
+    """Apply a diff to the file and return the new content and affected lines."""
+    # FIX: diff_text should end with a newline
+    if not diff_text.endswith("\n"):
+        diff_text += "\n"
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".patch", delete=False) as f:
+        diff_file = f.name
+        f.write(diff_text)
+
+    # print("git diff", diff_file)
+    # TODO: it's not perfect because it won't work for non git files
+    # Apply the patch using git
+    try:
+        result = subprocess.run(
+            [
+                "git",
+                "apply",
+                diff_file,
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as e:
+        return e.stderr
+    finally:
+        # Clean up temporary files
+        # os.unlink(diff_file)
+        pass
+
+    # Apply linter after applying the diff
+    # apply_linter() # TODO: fix
+    return result.stdout
+
+
+def apply_linter():
+    """Apply linter based on .vscode/settings.json"""
+    try:
+        with open(".vscode/settings.json", "r") as f:
+            settings = json.load(f)
+    except FileNotFoundError:
+        print(".vscode/settings.json not found")
+        return
+    except json.JSONDecodeError:
+        print("Error decoding .vscode/settings.json")
+        return
+
+    # Check for Python-related settings
+    python_settings = settings.get("python", {})
+
+    # Apply linter settings
+    linter = python_settings.get("linting", {}).get("pylintEnabled", False)
+    if linter:
+        print("Applying Pylint")
+        pylint_command = "pylint ."
+        try:
+            subprocess.run(pylint_command, shell=True, check=True)
+            print("Pylint applied successfully")
+        except subprocess.CalledProcessError:
+            print("Error applying Pylint")
+
+    # Check for Ruff settings
+    ruff_settings = settings.get("ruff", {})
+    if ruff_settings:
+        print("Ruff settings found, but not implemented yet")
+        # TODO: Implement Ruff linting based on settings

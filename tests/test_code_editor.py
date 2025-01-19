@@ -1,9 +1,4 @@
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from code_editor import CodeEditor
+from autocode.code_editor import CodeEditor
 
 editor = CodeEditor()
 print(editor.read_file("tests/example.py"))

@@ -15,3 +15,5 @@ __pycache__/
 TODO.md
 
 insights.txt
+
+*.egg-info/
