@@ -1,7 +1,9 @@
-from typing import Optional
-import os
-from autochat import Autochat
 import datetime
+import os
+from typing import Optional
+
+from autochat import Autochat
+
 from code_editor import CodeEditor
 
 
@@ -138,7 +140,7 @@ class InsightfulAutochat(Autochat):
         self.instruction += f"\n\nInsights and Feedback:\n{insights_text}"
 
     def store_insight(self, insight: str):
-        """Store an insight or instruction in a text file and update instructions"""
+        """Store an insight for future guide to the agent. It should be general and not specific to a task."""
         with open(self.insights_file, "a") as f:
             f.write(insight + "\n")
         self.insights.append(insight)
@@ -155,7 +157,7 @@ initial_instructions = """You are an agent, which leverage tools to help you com
 When you generate shells, you will have the ability to run commands in them.
 Don't answer user query, but use tools to complete the task."""
 
-agent = InsightfulAutochat(initial_instructions, provider="anthropic")
+agent = InsightfulAutochat(initial_instructions, provider="openai", model="o1")
 terminal = Terminal()
 agent.add_tool(terminal)
 code_editor = CodeEditor()

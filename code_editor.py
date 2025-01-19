@@ -2,6 +2,7 @@ import json
 import subprocess
 import tempfile
 
+from pathlib import Path
 
 class CodeEditor:
     def __init__(self):
@@ -64,6 +65,25 @@ class CodeEditor:
         # Apply linter after applying the diff
         # apply_linter() # TODO: fix
         return result.stdout
+
+    def search_files(self, search_text: str, directory: str = '.') -> list:
+        """
+        Search recursively in the provided directory (default current directory)
+        for files containing the specified search_text.
+        Returns the list of file paths that contain the text.
+        """
+        files_found = []
+        for path in Path(directory).rglob('*'):
+            if path.is_file():
+                try:
+                    with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                        content = f.read()
+                        if search_text in content:
+                            files_found.append(str(path))
+                except Exception:
+                    # If any file can't be read for some reason, skip it
+                    pass
+        return files_found
 
 
 def apply_linter():
