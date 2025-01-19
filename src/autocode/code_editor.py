@@ -1,3 +1,4 @@
+import os
 from .directory_utils import list_non_gitignore_files
 
 
@@ -55,18 +56,24 @@ class CodeEditor:
         # Initialize directory
         self.directory = directory
 
+    def display_directory(self) -> str:
+        """Display all the non-gitignored files in the directory."""
+        files = list_non_gitignore_files(self.directory)
+        return "\n".join(files)
+
     def search_files(self, search_text: str) -> str:
         """Search recursively for files containing 'search_text' and return results in VSCode format."""
         files = list_non_gitignore_files(self.directory)
         results = []
 
         for path in files:
+            full_path = os.path.join(self.directory, path)
             try:
-                with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
                     lines = f.readlines()
                     matches = []
                     for i, line in enumerate(lines, 1):
-                        if search_text in line:
+                        if search_text.lower() in line.lower():
                             # Strip whitespace and limit line length if too long
                             line_preview = line.strip()
                             if len(line_preview) > 100:
@@ -74,18 +81,10 @@ class CodeEditor:
                             matches.append(f"  Line {i}: {line_preview}")
 
                     if matches:
-                        results.append(f"> {path}")
+                        results.append(f"> {os.path.relpath(full_path, self.directory)}")
                         results.extend(matches)
                         results.append("")  # Empty line between files
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Error reading file {full_path}: {e}")
 
         return "\n".join(results).rstrip()
-
-    def __repr__(self):
-        return "\n".join(self.files[:10])
-
-
-if __name__ == "__main__":
-    editor = CodeEditor()
-    print(editor.search_files("print"))
