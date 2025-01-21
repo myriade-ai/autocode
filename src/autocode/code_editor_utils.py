@@ -3,6 +3,8 @@ import os
 import subprocess
 import tempfile
 
+from .directory_utils import list_non_gitignore_files
+
 
 def apply_diff(diff_text: str):
     """Apply a diff to the file and return the new content and affected lines."""
@@ -45,7 +47,7 @@ def apply_ruff(code_action_settings, file_path: str):
         subprocess.run(["ruff", "format", file_path], check=False)
 
 
-def apply_linter(file_path: str):
+def apply_linter(file_path: str = None):
     """Apply linter based on .vscode/settings.json"""
     try:
         with open(".vscode/settings.json", "r") as f:
@@ -63,7 +65,13 @@ def apply_linter(file_path: str):
 
     if python_settings.get("editor.formatOnSave"):
         if python_settings.get("editor.defaultFormatter") == "charliermarsh.ruff":
-            apply_ruff(code_actions, file_path)
+            if file_path:
+                apply_ruff(code_actions, file_path)
+            else:
+                # Apply to all non-gitignored Python files
+                for file in list_non_gitignore_files("."):
+                    if file.endswith(".py"):
+                        apply_ruff(code_actions, file)
         else:
             print(
                 f"Default formatter is {python_settings.get('editor.defaultFormatter')}, but not implemented"

@@ -26,7 +26,8 @@ class CodeEditor:
         """Write the entire content to a file."""
         with open(filename, "w") as f:
             f.write(content)
-        apply_linter()
+        # TODO: Implement linting with file_path argument
+        # apply_linter(filename)
 
     def delete_file(self, filename: str):
         """Delete a file."""
@@ -57,7 +58,7 @@ class CodeEditor:
             f.write(new_content)
 
         # Apply linter after editing the file
-        apply_linter()
+        apply_linter(filename)
 
         return new_content
 
