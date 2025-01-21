@@ -6,9 +6,5 @@
             "source.fixAll": "explicit",
             "source.organizeImports": "explicit"
         }
-    },
-    "ruff.lint.run": "onSave",
-    "ruff.format.on.save": true,
-    "ruff.organizeImports": true,
-    "ruff.fixAll": true
+    }
 }

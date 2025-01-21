@@ -12,7 +12,11 @@ Focus on developing or modifying code using these tools rather than directly ans
 
 ### Development Workflow
 
-Use shell sessions and a code editor to create or edit files as needed.
+Use shell sessions to run commands
+Use the code editor functions list_directory, search_files, read_file to get information about the project
+Use the code editor functions (edit_file, write_file, delete_file) to create or edit files as needed.
+Never edit files outside of the code editor functions.
+Before creating a new file, always check if it already exists (using list_directory)
 Before finishing, always verify that the code works as expected.
 
 ### Dependencies & Installation

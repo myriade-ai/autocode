@@ -2,7 +2,7 @@ import pytest
 import os
 import json
 from autocode.code_editor import CodeEditor
-from autocode.code_editor_utils import apply_linter
+
 
 @pytest.fixture
 def temp_python_file(tmp_path):
@@ -10,6 +10,7 @@ def temp_python_file(tmp_path):
     with open(file_path, "w") as f:
         f.write("def test_function():\n    print('Hello, World!')\n")
     return file_path
+
 
 @pytest.fixture
 def mock_vscode_settings(tmp_path):
@@ -20,17 +21,20 @@ def mock_vscode_settings(tmp_path):
             "lint.run": "onSave",
             "format.on.save": True,
             "organizeImports": True,
-            "fixAll": True
+            "fixAll": True,
         }
     }
     with open(settings_path, "w") as f:
         json.dump(settings, f)
     return settings_path
 
-def test_auto_linting_on_edit(temp_python_file, mock_vscode_settings, monkeypatch, capsys):
+
+def test_auto_linting_on_edit(
+    temp_python_file, mock_vscode_settings, monkeypatch, capsys
+):
     # Change the working directory to the temporary directory
     monkeypatch.chdir(temp_python_file.parent)
-    
+
     # Create a CodeEditor instance
     editor = CodeEditor()
 
@@ -46,7 +50,7 @@ def test_auto_linting_on_edit(temp_python_file, mock_vscode_settings, monkeypatc
         str(temp_python_file),
         line_index_start=2,
         delete_lines_count=1,
-        insert_text="    print('Hello, Linted World!')"
+        insert_text="    print('Hello, Linted World!')",
     )
 
     # Capture the output
@@ -61,12 +65,18 @@ def test_auto_linting_on_edit(temp_python_file, mock_vscode_settings, monkeypatc
     # Check the content of the file after editing
     with open(temp_python_file, "r") as f:
         content = f.read()
-    assert content.strip() == "def test_function():\n    print('Hello, Linted World!')".strip()
+    assert (
+        content.strip()
+        == "def test_function():\n    print('Hello, Linted World!')".strip()
+    )
 
-def test_auto_linting_not_applied_without_settings(temp_python_file, monkeypatch, capsys):
+
+def test_auto_linting_not_applied_without_settings(
+    temp_python_file, monkeypatch, capsys
+):
     # Change the working directory to the temporary directory
     monkeypatch.chdir(temp_python_file.parent)
-    
+
     # Create a CodeEditor instance
     editor = CodeEditor()
 
@@ -82,7 +92,7 @@ def test_auto_linting_not_applied_without_settings(temp_python_file, monkeypatch
         str(temp_python_file),
         line_index_start=2,
         delete_lines_count=1,
-        insert_text="    print('Hello, Unlinted World!')"
+        insert_text="    print('Hello, Unlinted World!')",
     )
 
     # Capture the output
@@ -94,9 +104,11 @@ def test_auto_linting_not_applied_without_settings(temp_python_file, monkeypatch
     # Check the content of the file after editing
     with open(temp_python_file, "r") as f:
         content = f.read()
-    assert content.strip() == "def test_function():\n    print('Hello, Unlinted World!')".strip()
+    assert (
+        content.strip()
+        == "def test_function():\n    print('Hello, Unlinted World!')".strip()
+    )
 
     # Print the captured output for debugging
     print("Captured output:")
     print(captured.out)
-
