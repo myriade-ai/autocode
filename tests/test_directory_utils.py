@@ -33,16 +33,28 @@ def temp_directory(tmp_path):
     root_gitignore_content = """
 # Python virtual environment
 .venv/
-    
+
 # Python cache files
 __pycache__/
 *.pyc
-    
+
 # Specific files to ignore
 file2.py
+
+# Test folders
+ignored_folder
+ignored_folder_with_slash/
 """
     (tmp_path / ".gitignore").write_text(root_gitignore_content.strip())
 
+    # Create ignored folders
+    ignored_folder = tmp_path / "ignored_folder"
+    ignored_folder.mkdir()
+    (ignored_folder / "ignored_file.txt").write_text("content")
+
+    ignored_folder_with_slash = tmp_path / "ignored_folder_with_slash"
+    ignored_folder_with_slash.mkdir()
+    (ignored_folder_with_slash / "ignored_file.txt").write_text("content")
     # Create .gitignore file in subdirectory
     subdir_gitignore_content = """
 # Ignore Python files in this subdirectory
@@ -101,6 +113,29 @@ def test_empty_directory(tmp_path):
     """Test handling of an empty directory"""
     files = list_non_gitignore_files(str(tmp_path))
     assert files == []
+
+
+def test_ignore_folders_with_and_without_slash(temp_directory):
+    """Test that folders are ignored regardless of trailing slash in .gitignore"""
+    files = list_non_gitignore_files(str(temp_directory))
+
+    # Convert paths to relative and normalize them
+    rel_files = [os.path.relpath(f, str(temp_directory)) for f in files]
+    rel_files = [f.replace(os.sep, "/") for f in rel_files]
+
+    # Check that neither ignored folder is in the list of files
+    assert not any(f.startswith("ignored_folder") for f in rel_files)
+    assert not any(f.startswith("ignored_folder_with_slash") for f in rel_files)
+
+    # Expected files (not ignored by .gitignore)
+    expected_files = {
+        "file1.txt",
+        "subdir/subfile1.txt",
+        ".gitignore",
+        "subdir/.gitignore",
+    }
+
+    assert set(rel_files) == expected_files
 
 
 def test_no_gitignore(tmp_path):

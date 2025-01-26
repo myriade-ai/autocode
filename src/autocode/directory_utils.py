@@ -35,8 +35,14 @@ def list_non_gitignore_files(directory: str = ".") -> list:
             parent_patterns = gitignore_patterns.get(str(parent), [])
             rel_path = file_path.relative_to(parent).as_posix()
             for pattern in parent_patterns:
-                if fnmatch(rel_path, pattern) or rel_path.startswith(".git/"):
+                if pattern.endswith("/"):
+                    # If the pattern ends with '/', match it as a directory
+                    if fnmatch(rel_path, pattern) or fnmatch(rel_path, f"{pattern}**"):
+                        return True
+                elif fnmatch(rel_path, pattern) or rel_path.startswith(f"{pattern}/"):
                     return True
+            if rel_path.startswith(".git/"):
+                return True
         return False
 
     # Collect all .gitignore files and their patterns
