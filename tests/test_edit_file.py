@@ -1,6 +1,8 @@
 import os
 
-from autocode.code_editor import edit_file
+from autocode.code_editor import CodeEditor
+
+code_editor = CodeEditor()
 
 
 class TestEditFile:
@@ -20,7 +22,7 @@ class TestEditFile:
 
     def test_edit_file_remove_lines_and_insert(self):
         # Call the edit_file function we defined above (or from your module)
-        edit_file(
+        code_editor.edit_file(
             filename=self.filename,
             line_index_start=2,
             delete_lines_count=2,

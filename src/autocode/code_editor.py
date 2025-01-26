@@ -26,8 +26,11 @@ class CodeEditor:
         """Write the entire content to a file."""
         with open(filename, "w") as f:
             f.write(content)
-        # TODO: Implement linting with file_path argument
-        # apply_linter(filename)
+
+        apply_linter(filename)
+
+        with open(filename, "r") as f:
+            return f.read()
 
     def delete_file(self, filename: str):
         """Delete a file."""
@@ -60,7 +63,8 @@ class CodeEditor:
         # Apply linter after editing the file
         apply_linter(filename)
 
-        return new_content
+        with open(filename, "r") as f:
+            return f.read()
 
     def display_directory(self) -> str:
         """Display all the non-gitignored files in the directory."""

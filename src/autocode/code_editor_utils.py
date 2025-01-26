@@ -1,9 +1,11 @@
 import json
+import logging
 import os
 import subprocess
 import tempfile
+from typing import Optional
 
-from .directory_utils import list_non_gitignore_files
+logger = logging.getLogger(__name__)
 
 
 def apply_diff(diff_text: str):
@@ -35,16 +37,43 @@ def apply_diff(diff_text: str):
     return result.stdout
 
 
-def apply_ruff(code_action_settings, file_path: str):
+def apply_ruff_formatter(file_path: Optional[str] = None):
+    if not file_path:
+        file_path = "."
+    result = subprocess.run(
+        ["ruff", "format", file_path], check=True, capture_output=True, text=True
+    )
+    return result.stdout + result.stderr
+
+
+def apply_ruff_linter(
+    file_path: Optional[str] = None, code_action_settings: Optional[dict] = None
+):
+    if not file_path:
+        file_path = "."
+
+    if not code_action_settings:
+        code_action_settings = {}
+
+    commands = ["ruff", "check"]
+
+    # Add --fix flag if source.fixAll is explicit
     if code_action_settings.get("source.fixAll") == "explicit":
-        print("Explicit fix all requested, but not implemented for non-Ruff tools")
-        subprocess.run(["ruff", "check", "--fix", file_path], check=False)
+        commands.append("--fix")
+
+    # Add --select I for imports if source.organizeImports is explicit
     if code_action_settings.get("source.organizeImports") == "explicit":
-        print(
-            "Explicit organize imports requested, but not implemented for non-Ruff tools"
-        )
-        # subprocess.run(["ruff", "--select", "I", "--fix", file_path], check=False)
-        subprocess.run(["ruff", "format", file_path], check=False)
+        commands.extend(["--select", "I"])
+
+    commands.append(file_path)
+
+    result = subprocess.run(
+        commands,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout + result.stderr
 
 
 def apply_linter(file_path: str = None):
@@ -61,18 +90,18 @@ def apply_linter(file_path: str = None):
 
     # Check for Python-related settings
     python_settings = settings.get("[python]", {})
-    code_actions = python_settings.get("editor.codeActionsOnSave", {})
 
-    if python_settings.get("editor.formatOnSave"):
-        if python_settings.get("editor.defaultFormatter") == "charliermarsh.ruff":
-            if file_path:
-                apply_ruff(code_actions, file_path)
-            else:
-                # Apply to all non-gitignored Python files
-                for file in list_non_gitignore_files("."):
-                    if file.endswith(".py"):
-                        apply_ruff(code_actions, file)
+    # If file is .py
+    if file_path.endswith(".py"):
+        default_formatter = python_settings.get("editor.defaultFormatter")
+        if default_formatter == "charliermarsh.ruff":
+            # Formatter
+            if python_settings.get("editor.formatOnSave"):
+                apply_ruff_formatter(file_path)
+
+            # Linter
+            code_actions = python_settings.get("editor.codeActionsOnSave", {})
+            if code_actions:
+                apply_ruff_linter(file_path, code_actions)
         else:
-            print(
-                f"Default formatter is {python_settings.get('editor.defaultFormatter')}, but not implemented"
-            )
+            print(f"Default formatter is {default_formatter}, but not implemented")

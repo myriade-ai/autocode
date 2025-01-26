@@ -1,6 +1,8 @@
-import pytest
-import os
 import json
+import os
+
+import pytest
+
 from autocode.code_editor import CodeEditor
 
 
@@ -17,11 +19,13 @@ def mock_vscode_settings(tmp_path):
     settings_path = tmp_path / ".vscode" / "settings.json"
     os.makedirs(settings_path.parent, exist_ok=True)
     settings = {
-        "ruff": {
-            "lint.run": "onSave",
-            "format.on.save": True,
-            "organizeImports": True,
-            "fixAll": True,
+        "[python]": {
+            "editor.formatOnSave": True,
+            "editor.defaultFormatter": "charliermarsh.ruff",
+            "editor.codeActionsOnSave": {
+                "source.fixAll": "explicit",
+                "source.organizeImports": "explicit",
+            },
         }
     }
     with open(settings_path, "w") as f:
@@ -38,13 +42,6 @@ def test_auto_linting_on_edit(
     # Create a CodeEditor instance
     editor = CodeEditor()
 
-    # Mock the subprocess.run function to capture Ruff commands
-    def mock_subprocess_run(args, **kwargs):
-        print(f"Mock subprocess run: {' '.join(args)}")
-        return None
-
-    monkeypatch.setattr("subprocess.run", mock_subprocess_run)
-
     # Edit the file
     editor.edit_file(
         str(temp_python_file),
@@ -53,21 +50,12 @@ def test_auto_linting_on_edit(
         insert_text="    print('Hello, Linted World!')",
     )
 
-    # Capture the output
-    captured = capsys.readouterr()
-
-    # Assert that Ruff commands were called
-    assert "Mock subprocess run: ruff check ." in captured.out
-    assert "Mock subprocess run: ruff format ." in captured.out
-    assert "Mock subprocess run: ruff --select I --fix ." in captured.out
-    assert "Mock subprocess run: ruff --fix ." in captured.out
-
     # Check the content of the file after editing
     with open(temp_python_file, "r") as f:
         content = f.read()
     assert (
         content.strip()
-        == "def test_function():\n    print('Hello, Linted World!')".strip()
+        == 'def test_function():\n    print("Hello, Linted World!")'.strip()
     )
 
 
@@ -80,13 +68,6 @@ def test_auto_linting_not_applied_without_settings(
     # Create a CodeEditor instance
     editor = CodeEditor()
 
-    # Mock the subprocess.run function to capture Ruff commands
-    def mock_subprocess_run(args, **kwargs):
-        print(f"Mock subprocess run: {' '.join(args)}")
-        return None
-
-    monkeypatch.setattr("subprocess.run", mock_subprocess_run)
-
     # Edit the file
     editor.edit_file(
         str(temp_python_file),
@@ -95,12 +76,6 @@ def test_auto_linting_not_applied_without_settings(
         insert_text="    print('Hello, Unlinted World!')",
     )
 
-    # Capture the output
-    captured = capsys.readouterr()
-
-    # Assert that no Ruff commands were called
-    assert "Mock subprocess run: ruff" not in captured.out
-
     # Check the content of the file after editing
     with open(temp_python_file, "r") as f:
         content = f.read()
@@ -108,7 +83,3 @@ def test_auto_linting_not_applied_without_settings(
         content.strip()
         == "def test_function():\n    print('Hello, Unlinted World!')".strip()
     )
-
-    # Print the captured output for debugging
-    print("Captured output:")
-    print(captured.out)
