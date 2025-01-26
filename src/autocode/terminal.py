@@ -12,7 +12,9 @@ class Shell:
     def __init__(self):
         """Initialize with empty history"""
         self.history = []
-        self.long_running_processes = {}
+        self.active_process = None
+        self.output_queue = None
+        self.output_thread = None
 
     def __repr__(self):
         """Display the command history and their outputs"""
@@ -27,6 +29,13 @@ class Shell:
                     result = result[:2000] + "\n...\n"
                 output.append(result)
 
+        # Add current running command status if exists
+        if self.active_process:
+            current_output = self._get_current_output()
+            if current_output:
+                output.append("Current running command output:")
+                output.append(current_output)
+
         return "\n".join(output)
 
     def scroll_up(self):
@@ -37,7 +46,7 @@ class Shell:
         """Scroll down in the terminal"""
         subprocess.run(["tput", "cud1"], shell=True)
 
-    def _process_output(self, process, command_id, output_queue):
+    def _process_output(self, process, output_queue):
         while True:
             if process.poll() is not None:
                 break
@@ -56,6 +65,13 @@ class Shell:
 
     def run_command(self, command):
         """Run a command in the shell"""
+        # Kill any existing process before starting a new one
+        if self.active_process:
+            self.active_process.terminate()
+            self.active_process = None
+            self.output_thread = None
+            self.output_queue = None
+
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
             process = subprocess.Popen(
@@ -67,21 +83,19 @@ class Shell:
             )
 
             output = ""
-            output_queue = Queue()
-            command_id = id(process)
+            self.output_queue = Queue()
+            self.active_process = process
 
             # Start a thread to handle the process output
-            thread = threading.Thread(
-                target=self._process_output, args=(process, command_id, output_queue)
+            self.output_thread = threading.Thread(
+                target=self._process_output, args=(process, self.output_queue)
             )
-            thread.start()
+            self.output_thread.start()
 
             start_time = time.time()
-            is_long_running = False
             while True:
                 try:
-                    # Wait for output with a timeout
-                    chunk = output_queue.get(timeout=0.1)
+                    chunk = self.output_queue.get(timeout=0.1)
                     if chunk is None:  # Process has finished
                         break
                     output += chunk
@@ -89,44 +103,30 @@ class Shell:
                     pass
 
                 if time.time() - start_time > 5:  # 5 seconds timeout
-                    # Don't terminate, just stop waiting
-                    is_long_running = True
-                    break
+                    output += "\nCommand is still running..."
+                    self.history.append((timestamp, command, output))
+                    return output.strip()
 
-            if is_long_running:
-                self.long_running_processes[command_id] = (
-                    process,
-                    thread,
-                    output_queue,
-                )
-                output += "\nCommand is still running..."
-            else:
-                # Ensure we've collected all output
-                while not output_queue.empty():
-                    chunk = output_queue.get()
-                    if chunk is None:
-                        break
-                    output += chunk
-
+            self.active_process = None
             self.history.append((timestamp, command, output))
             return output.strip()
+
         except Exception as e:
             error_msg = str(e)
             self.history.append((timestamp, command, error_msg))
             return error_msg
 
-    def get_long_running_command_output(self, command_id):
-        """Get the current output of a long-running command"""
-        if command_id not in self.long_running_processes:
-            return "Command not found or has finished."
+    def _get_current_output(self):
+        """Get the current output of the running command"""
+        if not self.active_process or not self.output_queue:
+            return ""
 
-        process, thread, output_queue = self.long_running_processes[command_id]
         output = ""
-        while not output_queue.empty():
-            chunk = output_queue.get()
+        while not self.output_queue.empty():
+            chunk = self.output_queue.get()
             if chunk is None:  # Process has finished
-                del self.long_running_processes[command_id]
-                return output + "Command has finished."
+                self.active_process = None
+                return output + "\nCommand has finished."
             output += chunk
 
         return output if output else "No new output."

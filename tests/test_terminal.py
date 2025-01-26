@@ -59,31 +59,6 @@ class TestShell(unittest.TestCase):
 
         self.assertIn("Error message", result)
 
-    @patch("subprocess.Popen")
-    @patch("time.time")
-    def test_get_long_running_command_output(self, mock_time, mock_popen):
-        mock_process = MagicMock()
-        mock_process.poll.side_effect = [None] * 30 + [0]  # Run for 6 seconds
-        mock_process.stdout.read.side_effect = (
-            ["Initial output"] + [" "] * 28 + ["Final output"]
-        )
-        mock_process.stderr.read.return_value = ""
-        mock_process.communicate.return_value = ("", "")
-        mock_popen.return_value = mock_process
-
-        mock_time.side_effect = list(range(62))  # 0 to 61 seconds
-
-        initial_result = self.shell.run_command("long_running_command")
-        self.assertIn("Initial output", initial_result)
-        self.assertIn("Command is still running...", initial_result)
-
-        command_id = id(mock_process)
-        additional_output = self.shell.get_long_running_command_output(command_id)
-        self.assertIn("Final output", additional_output)
-
-        # Check that the command is removed from long_running_processes
-        self.assertNotIn(command_id, self.shell.long_running_processes)
-
 
 class TestTerminal(unittest.TestCase):
     def setUp(self):
