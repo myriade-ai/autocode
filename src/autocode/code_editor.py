@@ -1,5 +1,7 @@
 import os
 
+from PIL import Image
+
 from .code_editor_utils import apply_linter
 from .directory_utils import list_non_gitignore_files
 
@@ -15,7 +17,12 @@ class CodeEditor:
     def read_file(
         self, filename: str, start_line: int = 1, end_line: int = None
     ) -> str:
-        """Read a file with line numbers."""
+        """Read a file with line numbers
+        If the file is an image, return a base64-encoded string.
+        """
+        if filename.lower().endswith((".png", ".jpg", ".jpeg")):
+            return Image.open(filename)
+
         with open(filename, "r") as f:
             lines = f.read().splitlines()
 
@@ -104,3 +111,42 @@ class CodeEditor:
                 print(f"Error reading file {full_path}: {e}")
 
         return "\n".join(results).rstrip()
+
+    # def submit(self):
+    #     """Create a branch, run tests, and ask user for a review."""
+    #     import subprocess
+
+    #     # Create a new branch
+    #     branch_name = f"feature-{int(time.time())}"
+    #     subprocess.run(["git", "checkout", "-b", branch_name], check=True)
+
+    #     # Run tests
+    #     test_result = subprocess.run(["pytest"], capture_output=True, text=True)
+
+    #     if test_result.returncode != 0:
+    #         print("Tests failed. Please fix the issues before submitting.")
+    #         print(test_result.stdout)
+    #         print(test_result.stderr)
+    #         return
+
+    #     # If tests pass, show changes and ask for review
+    #     diff = subprocess.run(["git", "diff"], capture_output=True, text=True).stdout
+    #     print("Changes to be submitted:")
+    #     print(diff)
+
+    #     user_input = input("Do you want to submit these changes? (y/n): ").lower()
+    #     if user_input == "y":
+    #         # Commit changes
+    #         subprocess.run(["git", "add", "."], check=True)
+    #         subprocess.run(
+    #             ["git", "commit", "-m", f"Feature: {branch_name}"], check=True
+    #         )
+
+    #         # Push to remote
+    #         subprocess.run(["git", "push", "-u", "origin", branch_name], check=True)
+    #         print(f"Changes have been pushed to branch: {branch_name}")
+    #     else:
+    #         print("Submission cancelled.")
+
+    #     # Switch back to the main branch
+    #     subprocess.run(["git", "checkout", "main"], check=True)
