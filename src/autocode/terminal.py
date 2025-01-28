@@ -141,7 +141,9 @@ class Terminal:
 
     def __repr__(self):
         """Display the list of shells"""
-        return "Shells:\n" + "\n".join(["- " + name for name in self.shells])
+        if not self.shells:
+            return "No shells created yet"
+        return "Available shells:\n" + "\n".join(["- " + name for name in self.shells])
 
     def repr(self):  # Hack to allow for shell.repr()
         """Display the list of shells"""

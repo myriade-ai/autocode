@@ -41,7 +41,7 @@ def apply_ruff_formatter(file_path: Optional[str] = None):
     if not file_path:
         file_path = "."
     result = subprocess.run(
-        ["ruff", "format", file_path], check=True, capture_output=True, text=True
+        ["ruff", "format", file_path], capture_output=True, text=True
     )
     return result.stdout + result.stderr
 
@@ -69,7 +69,6 @@ def apply_ruff_linter(
 
     result = subprocess.run(
         commands,
-        check=True,
         capture_output=True,
         text=True,
     )

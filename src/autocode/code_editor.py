@@ -8,6 +8,10 @@ class CodeEditor:
     def __init__(self, directory: str = "."):
         self.directory = directory
 
+    def __repr__(self):
+        """Currently: display the directory of the code editor."""
+        return "Directory:\n" + self.display_directory()
+
     def read_file(
         self, filename: str, start_line: int = 1, end_line: int = None
     ) -> str:
@@ -95,7 +99,7 @@ class CodeEditor:
                             f"> {os.path.relpath(full_path, self.directory)}"
                         )
                         results.extend(matches)
-                        results.append("")  # Empty line between files
+                        results.append("")  # Add a blank line between file results
             except Exception as e:
                 print(f"Error reading file {full_path}: {e}")
 
