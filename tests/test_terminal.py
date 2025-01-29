@@ -1,6 +1,4 @@
-import subprocess
 import unittest
-from unittest.mock import MagicMock, patch
 
 from autocode.terminal import Shell, Terminal
 
@@ -9,55 +7,42 @@ class TestShell(unittest.TestCase):
     def setUp(self):
         self.shell = Shell()
 
-    @patch("subprocess.Popen")
-    def test_run_quick_command(self, mock_popen):
-        mock_process = MagicMock()
-        mock_process.poll.side_effect = [None, 0]
-        mock_process.stdout.read.side_effect = ["Hello, World!"]
-        mock_process.stderr.read.return_value = ""
-        mock_process.communicate.return_value = ("", "")
-        mock_popen.return_value = mock_process
+    def test_immediate_command(self):
+        """Test a command that completes immediately"""
+        shell = Shell()
+        result = shell.run_command("echo 'Hello, World!'")
+        self.assertEqual(result.strip(), "Hello, World!")
 
-        result = self.shell.run_command("echo 'Hello, World!'")
+    def test_multiline_output(self):
+        """Test a command that produces multiple lines of output"""
+        shell = Shell()
+        result = shell.run_command("echo 'Line 1\nLine 2\nLine 3'")
+        self.assertEqual(result.strip(), "Line 1\nLine 2\nLine 3")
 
-        mock_popen.assert_called_once_with(
-            "echo 'Hello, World!'",
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
+    def test_command_with_error(self):
+        """Test a command that produces stderr output"""
+        shell = Shell()
+        result = shell.run_command("ls nonexistentfile")
+        self.assertIn("No such file or directory", result)
 
-        self.assertEqual(result, "Hello, World!")
+    def test_quick_continuous_output(self):
+        """Test a command that produces multiple outputs but finishes quickly"""
+        shell = Shell()
+        result = shell.run_command("for i in {1..5}; do echo $i; done")
+        self.assertEqual(result.strip(), "1\n2\n3\n4\n5")
 
-    @patch("subprocess.Popen")
-    @patch("time.time")
-    def test_run_long_command(self, mock_time, mock_popen):
-        mock_process = MagicMock()
-        mock_process.poll.return_value = None
-        mock_process.stdout.read.side_effect = ["Long", " running", " command"]
-        mock_process.stderr.read.return_value = ""
-        mock_popen.return_value = mock_process
-
-        mock_time.side_effect = [0, 1, 2, 3, 4, 5, 6]
-
-        result = self.shell.run_command("long_running_command")
-
-        self.assertIn("Long running command", result)
+    def test_long_running_command(self):
+        """Test a command that takes longer than 5 seconds"""
+        shell = Shell()
+        shell.RETURN_TIMEOUT_SECONDS = 0.5
+        result = shell.run_command("for i in {1..10}; do echo $i; sleep 0.1; done")
         self.assertIn("Command is still running...", result)
-
-    @patch("subprocess.Popen")
-    def test_run_command_error(self, mock_popen):
-        mock_process = MagicMock()
-        mock_process.poll.side_effect = [None, 1]
-        mock_process.stdout.read.return_value = ""
-        mock_process.stderr.read.return_value = "Error message"
-        mock_process.communicate.return_value = ("", "")
-        mock_popen.return_value = mock_process
-
-        result = self.shell.run_command("invalid_command")
-
-        self.assertIn("Error message", result)
+        # Should have some numbers but not all 20
+        self.assertTrue(any(str(i) in result for i in range(1, 10)))
+        # Should have at least 1-3
+        self.assertTrue(all(str(i) in result for i in range(1, 4)))
+        # Should not have all 10
+        self.assertFalse(all(str(i) in result for i in range(1, 10)))
 
 
 class TestTerminal(unittest.TestCase):
