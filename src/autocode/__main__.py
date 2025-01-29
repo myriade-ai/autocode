@@ -1,6 +1,7 @@
 from autochat import Autochat
 
 from autocode.code_editor import CodeEditor
+from autocode.render import render_url_and_return_screenshot
 from autocode.terminal import Terminal
 
 # Initialize the agent with basic instructions
@@ -54,3 +55,4 @@ terminal = Terminal()
 agent.add_tool(terminal)
 code_editor = CodeEditor()
 agent.add_tool(code_editor)
+agent.add_function(render_url_and_return_screenshot)

@@ -27,6 +27,7 @@ def main():
             break
         except Exception as e:
             print(f"An error occurred: {e}")
+            raise e
 
 
 if __name__ == "__main__":

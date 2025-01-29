@@ -1,6 +1,18 @@
 from fnmatch import fnmatch
 from pathlib import Path
 
+DEFAULT_IGNORE_PATTERNS = [
+    "**/.git/**",
+    "**/.svn/**",
+    "**/.hg/**",
+    "**/CVS/**",
+    "**/.DS_Store",
+    "**/Thumbs.db",
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/*.code-search/**",
+]
+
 
 def _read_gitignore(gitignore_path: str) -> list:
     ignored_patterns = []
@@ -31,6 +43,12 @@ def list_non_gitignore_files(directory: str = ".") -> list:
     directory_path = Path(directory).resolve()
 
     def should_ignore(file_path: Path, gitignore_patterns: dict) -> bool:
+        # Check against default ignore patterns first
+        rel_path = str(file_path.relative_to(directory_path).as_posix())
+        for pattern in DEFAULT_IGNORE_PATTERNS:
+            if fnmatch(rel_path, pattern):
+                return True
+
         for parent in file_path.parents:
             parent_patterns = gitignore_patterns.get(str(parent), [])
             rel_path = file_path.relative_to(parent).as_posix()
