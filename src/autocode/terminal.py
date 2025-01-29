@@ -1,5 +1,6 @@
 import datetime
-import select
+import fcntl
+import os
 import subprocess
 import threading
 import time
@@ -51,91 +52,86 @@ class Shell:
         subprocess.run(["tput", "cud1"], shell=True)
 
     def _process_output(self, process, output_queue):
-        """Process output from the command in a separate thread.
+        """Process output from the command in a separate thread"""
+        # Set non-blocking mode for stdout and stderr
+        for pipe in [process.stdout, process.stderr]:
+            fd = pipe.fileno()
+            fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+            fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
-        This function runs in a separate thread and continuously reads output from
-        the process's stdout and stderr, putting the output into a queue for the
-        main thread to consume.
-
-        Implementation details:
-        - Uses select() to check for available output without blocking
-        - Runs in a separate thread to prevent blocking the main thread
-        - Uses a very small sleep (0.001s) to prevent CPU spinning
-        - Captures both stdout and stderr simultaneously
-        - Signals completion by putting None into the queue
-
-        Args:
-            process: A subprocess.Popen object representing the running process
-            output_queue: A Queue object to store the process output
-        """
-
-        def read_all_available(pipe):
-            """Read all available output from a pipe without blocking.
-
-            Uses select to check if there's data ready to be read, then reads
-            all available lines from the pipe. This prevents blocking while
-            waiting for output.
-
-            Implementation details:
-            - Uses select with 0 timeout for non-blocking checks
-            - Reads line by line until no more data is available
-            - Preserves newlines in the output
-            - Returns immediately if no data is available
-
-            Args:
-                pipe: A file-like object (process stdout or stderr)
-
-            Returns:
-                str: All available output from the pipe joined into a single string
-            """
-            output = []
-            while True:
-                # Check if there's data ready to be read
-                ready, _, _ = select.select([pipe], [], [], 0)
-                if not ready:
-                    break
-
-                line = pipe.readline()
-                if not line:
-                    break
-                output.append(line)
-            return "".join(output)
+        def read_pipe(pipe):
+            """Read from a non-blocking pipe"""
+            try:
+                output = pipe.read()
+                if output:
+                    if pipe == process.stderr:
+                        return output
+                    return output
+                return ""
+            except (IOError, TypeError):
+                return ""
 
         while True:
             if process.poll() is not None:
                 break
 
-            # Read all available output
-            output = read_all_available(process.stdout)
-            error = read_all_available(process.stderr)
+            # Read from both pipes
+            stdout_data = read_pipe(process.stdout)
+            stderr_data = read_pipe(process.stderr)
 
-            if output:
-                output_queue.put(output)
-            if error:
-                output_queue.put(error)
+            if stdout_data:
+                output_queue.put(stdout_data)
+            if stderr_data:
+                output_queue.put(stderr_data)
 
-            # Smaller sleep to check more frequently
+            # Small sleep to prevent CPU spinning
             time.sleep(0.001)
 
         # Get any remaining output
-        stdout, stderr = process.communicate()
-        if stdout:
-            output_queue.put(stdout)
-        if stderr:
-            output_queue.put(stderr)
+        try:
+            stdout, stderr = process.communicate(timeout=0.5)
+            if stdout:
+                output_queue.put(stdout)
+            if stderr:
+                output_queue.put(stderr)
+        except subprocess.TimeoutExpired:
+            pass
+
         output_queue.put(None)  # Signal that the process has finished
 
     def run_command(self, command):
-        """Run a command in the shell"""
+        """Run a command in the shell and capture its output.
+
+        This function executes a shell command and captures its output in real-time.
+        It will return early in two cases:
+        1. If the command completes within 5 seconds
+        2. If the command runs longer than 5 seconds or stops producing output for 0.5 seconds
+
+        Implementation details:
+        - Uses /bin/bash -c for proper shell command interpretation
+        - Creates a daemon thread for output processing
+        - Uses a Queue for thread-safe output transfer
+        - Implements timeout mechanism of 5 seconds maximum runtime
+        - Accumulates output in memory using a list for efficiency
+        - Uses line buffering (bufsize=1) for real-time output
+        - Captures both stdout and stderr
+
+        Args:
+            command: str, The shell command to execute
+
+        Returns:
+            str: The command's output (stdout and stderr combined).
+        """
         timestamp = datetime.datetime.now()
         try:
             print("running command", command)
             process = subprocess.Popen(
-                ["/bin/bash", "-c", command],  # Use bash to interpret commands properly
+                ["/bin/bash", "-c", command],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
                 bufsize=1,  # Line buffered
+                universal_newlines=True,  # Ensures proper newline handling
             )
 
             output = ""
@@ -144,32 +140,48 @@ class Shell:
 
             # Start a thread to handle the process output
             self.output_thread = threading.Thread(
-                target=self._process_output, args=(process, self.output_queue)
+                target=self._process_output,
+                args=(process, self.output_queue),
+                daemon=True,
             )
             self.output_thread.start()
 
             start_time = time.time()
+            accumulated_output = []
+
             while True:
-                # First, process all available output
-                while True:
-                    try:
-                        chunk = self.output_queue.get_nowait()
-                        if chunk is None:  # Process has finished
-                            self.active_process = None
-                            self.history.append((timestamp, command, output))
-                            return output.strip()
-                        output += chunk
-                    except Empty:
-                        break  # No more output available right now
+                try:
+                    chunk = self.output_queue.get(timeout=0.1)
+                    if chunk is None:  # Process has finished
+                        # Get the final return code
+                        return_code = process.poll()
+                        self.active_process = None
+                        final_output = "".join(accumulated_output)
 
-                # Then check if we've hit the timeout
-                if time.time() - start_time > self.RETURN_TIMEOUT_SECONDS:
-                    output += "\nCommand is still running..."
-                    self.history.append((timestamp, command, output))
-                    return output.strip()
+                        # If process failed, make sure we get any final error output
+                        if return_code != 0:
+                            _, stderr = process.communicate()
+                            if stderr:
+                                final_output += stderr
 
-                # Short sleep to prevent CPU spinning
-                time.sleep(0.1)
+                        self.history.append((timestamp, command, final_output))
+                        return final_output.strip()
+
+                    accumulated_output.append(chunk)
+                except Empty:
+                    if time.time() - start_time > self.RETURN_TIMEOUT_SECONDS:
+                        # Before timing out, try to get any buffered error output
+                        try:
+                            _, stderr = process.communicate(timeout=0.1)
+                            if stderr:
+                                accumulated_output.append(stderr)
+                        except subprocess.TimeoutExpired:
+                            pass
+
+                        output = "".join(accumulated_output)
+                        output += "\nCommand is still running..."
+                        self.history.append((timestamp, command, output))
+                        return output.strip()
 
         except Exception as e:
             error_msg = str(e)

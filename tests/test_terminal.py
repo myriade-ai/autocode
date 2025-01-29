@@ -44,6 +44,14 @@ class TestShell(unittest.TestCase):
         # Should not have all 10
         self.assertFalse(all(str(i) in result for i in range(1, 10)))
 
+    def test_error_output_capture(self):
+        """Test that error output is properly captured"""
+        shell = Shell()
+        # This command will output to both stdout and stderr
+        result = shell.run_command('echo "stdout message" && echo "error message" >&2')
+        self.assertIn("stdout message", result)
+        self.assertIn("error message", result)
+
 
 class TestTerminal(unittest.TestCase):
     def setUp(self):
