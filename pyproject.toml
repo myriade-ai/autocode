@@ -7,13 +7,21 @@ name = "autocode"
 version = "0.1.0"
 description = "A library for auto-generating and managing code"
 readme = "README.md"
-requires-python = ">=3.6"
+requires-python = ">=3.9"
 dependencies = [
-    "autochat",
+    "autochat[all]",
+    "pillow",
+    "playwright",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
+    "ruff>=0.9.4",
+]
 
 [project.scripts]
 autocode = "autocode.cli:main"
