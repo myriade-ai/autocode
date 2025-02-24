@@ -4,10 +4,12 @@ from autocode.__main__ import agent
 
 
 def main():
+    initial_prompt = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else None
     while True:
         try:
-            if len(sys.argv) > 1:
-                prompt = " ".join(sys.argv[1:])
+            if initial_prompt:
+                prompt = initial_prompt
+                initial_prompt = None
             else:
                 prompt = input("Enter your prompt (Ctrl+C to exit): ")
 

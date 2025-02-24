@@ -8,7 +8,7 @@ DEFAULT_IGNORE_PATTERNS = [
     "**/CVS/**",
     "**/.DS_Store",
     "**/Thumbs.db",
-    "**/node_modules/**",
+    "**/node_modules/**",  # TODO: add test for this
     "**/bower_components/**",
     "**/*.code-search/**",
 ]

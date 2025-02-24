@@ -14,11 +14,9 @@ class CodeEditor:
         """Currently: display the directory of the code editor."""
         return "Directory:\n" + self.display_directory()
 
-    def read_file(
-        self, filename: str, start_line: int = 1, end_line: int = None
-    ) -> str:
+    def read_file(self, filename: str, start_line: int = 1, end_line: int = None):
         """Read a file with line numbers
-        If the file is an image, return a base64-encoded string.
+        If the file is an image, return a base64-encoded image
         """
         if filename.lower().endswith((".png", ".jpg", ".jpeg")):
             return Image.open(filename)
@@ -52,7 +50,7 @@ class CodeEditor:
         filename: str,
         line_index_start: int,
         delete_lines_count: int,
-        insert_text: str,
+        insert_text: str = None,
     ) -> str:
         """Delete a range of lines and insert text at the start line.
         Line numbers are 1-indexed.
@@ -64,7 +62,12 @@ class CodeEditor:
         line_index_start -= 1
         line_index_end = line_index_start + delete_lines_count
 
-        new_lines = lines[:line_index_start] + [insert_text] + lines[line_index_end:]
+        if insert_text:
+            new_lines = (
+                lines[:line_index_start] + [insert_text] + lines[line_index_end:]
+            )
+        else:
+            new_lines = lines[:line_index_start] + lines[line_index_end:]
         new_content = "\n".join(new_lines)
 
         # Write the changes to the file
