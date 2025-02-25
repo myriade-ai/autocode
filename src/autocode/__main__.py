@@ -47,7 +47,7 @@ Always verify that your actions and outputs align with user instructions and req
 """
 
 
-agent = Autochat(instruction, provider="anthropic", model="claude-3-5-sonnet-20241022")
+agent = Autochat(instruction, provider="anthropic", model="claude-3-7-sonnet-latest")
 terminal = Terminal()
 agent.add_tool(terminal)
 code_editor = CodeEditor()
