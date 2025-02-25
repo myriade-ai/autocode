@@ -19,7 +19,7 @@ def main():
 
             try:
                 for message in agent.run_conversation(prompt):
-                    print(message.to_markdown())
+                    print(message.to_terminal(display_image=True))
             except KeyboardInterrupt:
                 print("\nStopped the AI loop...")
                 break
