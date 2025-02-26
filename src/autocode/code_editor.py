@@ -113,6 +113,9 @@ class CodeEditor:
             except Exception as e:
                 print(f"Error reading file {full_path}: {e}")
 
+        if not results:
+            return "No files found."
+
         return "\n".join(results).rstrip()
 
     # def submit(self):
