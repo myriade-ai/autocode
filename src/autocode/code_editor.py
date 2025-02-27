@@ -54,6 +54,13 @@ class CodeEditor:
     ) -> str:
         """Delete a range of lines and insert text at the start line.
         Line numbers are 1-indexed.
+        Args:
+            filename: The path to the file to edit.
+            line_index_start: The line number to start deleting from.
+            delete_lines_count: The number of lines to delete.
+            insert_text: The text to insert at the start line.
+        Returns:
+            The content of the file after editing.
         """
         with open(filename, "r") as f:
             lines = f.read().splitlines()
