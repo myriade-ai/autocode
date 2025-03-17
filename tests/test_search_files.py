@@ -1,6 +1,8 @@
-import pytest
 import os
 from unittest.mock import patch
+
+import pytest
+
 from autocode.code_editor import CodeEditor
 
 
@@ -43,7 +45,7 @@ def test_search_files_no_match(code_editor, temp_dir):
         return_value=["test_file.txt"],
     ):
         result = code_editor.search_files("nonexistent content")
-        assert result == ""
+        assert result == "No files found."
 
 
 def test_search_files_multiple_matches(code_editor, temp_dir):
@@ -74,5 +76,7 @@ def test_search_files_case_insensitive(code_editor, temp_dir):
         "autocode.directory_utils.list_non_gitignore_files",
         return_value=["test_file.txt"],
     ):
+        result = code_editor.search_files("content")
+        assert result == expected_result
         result = code_editor.search_files("content")
         assert result == expected_result

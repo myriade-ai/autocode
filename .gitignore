@@ -2,7 +2,7 @@
 .venv/
 
 # Python bytecode
-__pycache__/
+__pycache__
 *.pyc
 
 # macOS system files

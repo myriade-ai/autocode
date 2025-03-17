@@ -35,8 +35,7 @@ def temp_directory(tmp_path):
 .venv/
 
 # Python cache files
-__pycache__/
-*.pyc
+__pycache__
 
 # Specific files to ignore
 file2.py
@@ -164,3 +163,23 @@ def test_git_directory_exclusion(temp_directory):
 
     # Check that no files from .git directory are included
     assert not any(f.startswith(".git/") for f in rel_files)
+
+
+def test_ignore_directory_in_sub_directory_exclusion(temp_directory):
+    """Test that directory in sub directory is excluded"""
+    # Create a __pycache__ directory for the test
+    pycache_dir = temp_directory / "subdir" / "__pycache__"
+    pycache_dir.mkdir(parents=True)
+
+    # Create a file in the __pycache__ directory
+    pycache_file = pycache_dir / "test.pyc"
+    pycache_file.write_text("content")
+
+    files = list_non_gitignore_files(str(temp_directory))
+
+    # Convert paths to relative and normalize them
+    rel_files = [os.path.relpath(f, str(temp_directory)) for f in files]
+    rel_files = [f.replace(os.sep, "/") for f in rel_files]
+
+    # Check that no files from __pycache__ directory are included
+    assert not any(f.startswith("subdir/__pycache__") for f in rel_files)

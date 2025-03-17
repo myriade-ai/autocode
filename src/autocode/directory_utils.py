@@ -11,6 +11,7 @@ DEFAULT_IGNORE_PATTERNS = [
     "**/node_modules/**",  # TODO: add test for this
     "**/bower_components/**",
     "**/*.code-search/**",
+    "**/__pycache__/**",
 ]
 
 
@@ -59,8 +60,6 @@ def list_non_gitignore_files(directory: str = ".") -> list:
                         return True
                 elif fnmatch(rel_path, pattern) or rel_path.startswith(f"{pattern}/"):
                     return True
-            if rel_path.startswith(".git/"):
-                return True
         return False
 
     # Collect all .gitignore files and their patterns
