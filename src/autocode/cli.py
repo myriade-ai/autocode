@@ -1,19 +1,23 @@
-import sys
-import signal
+import logging
 import os
+import signal
+import sys
 
 from autocode.__main__ import agent
 
+logger = logging.getLogger(__name__)
+
 os.environ["AUTOCHAT_OUTPUT_SIZE_LIMIT"] = "10000"
+
 
 def main():
     # Set up a signal handler for SIGINT (Ctrl+C)
     def signal_handler(sig, frame):
         print("\nExiting conversation...")
         sys.exit(0)
-    
+
     signal.signal(signal.SIGINT, signal_handler)
-    
+
     initial_prompt = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else None
     while True:
         try:
@@ -21,12 +25,14 @@ def main():
                 prompt = initial_prompt
                 initial_prompt = None
             else:
-                prompt = input("Enter your prompt (Ctrl+C to exit, 'exit' or 'quit' to close): ")
+                prompt = input(
+                    "Enter your prompt (Ctrl+C to exit, 'exit' or 'quit' to close): "
+                )
 
             if not prompt.strip():
                 print("Please provide a prompt")
                 continue
-                
+
             if prompt.lower() in ["exit", "quit"]:
                 print("Exiting conversation...")
                 break
@@ -40,7 +46,7 @@ def main():
                 print("Press Ctrl+C again to exit completely or enter a new prompt.")
 
         except Exception as e:
-            print(f"An error occurred: {e}")
+            logger.error(f"An error occurred: {e}")
             raise e
 
 

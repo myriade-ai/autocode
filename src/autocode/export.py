@@ -4,10 +4,13 @@ Script to display folder structure,
 and aggregate all file contents into one big text with headings.
 """
 
+import logging
 import sys
 from pathlib import Path
 
 from autocode.directory_utils import list_non_gitignore_files
+
+logger = logging.getLogger(__name__)
 
 LONG_FILE_THRESHOLD = 1_000
 
@@ -65,7 +68,7 @@ def collect_files_content(root_dir: Path, tracked_files: set):
             rel_path = filepath.relative_to(root_dir)
             file_contents.append((rel_path, content))
         except Exception as e:
-            print(f"Skipping file {filepath} due to error: {e}", file=sys.stderr)
+            logger.error(f"Skipping file {filepath} due to error: {e}")
             continue
 
     return sorted(file_contents)
@@ -96,7 +99,7 @@ def prepare_export(directory: str):
 
 def main():
     if len(sys.argv) < 2:
-        print(f"Usage: {sys.argv[0]} <clone_dir>", file=sys.stderr)
+        logger.error(f"Usage: {sys.argv[0]} <clone_dir>")
         sys.exit(1)
 
     clone_dir = sys.argv[1]

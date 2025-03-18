@@ -81,10 +81,10 @@ def apply_linter(file_path: str = None):
         with open(".vscode/settings.json", "r") as f:
             settings = json.load(f)
     except FileNotFoundError:
-        print(".vscode/settings.json not found")
+        logger.warning(".vscode/settings.json not found")
         return
     except json.JSONDecodeError:
-        print("Error decoding .vscode/settings.json")
+        logger.error("Error decoding .vscode/settings.json")
         return
 
     # Check for Python-related settings
@@ -103,4 +103,6 @@ def apply_linter(file_path: str = None):
             if code_actions:
                 apply_ruff_linter(file_path, code_actions)
         else:
-            print(f"Default formatter is {default_formatter}, but not implemented")
+            logger.warning(
+                f"Default formatter is {default_formatter}, but not implemented"
+            )

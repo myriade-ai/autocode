@@ -1,11 +1,14 @@
 import datetime
 import fcntl
+import logging
 import os
 import subprocess
 import threading
 import time
 from queue import Empty, Queue
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 class Shell:
@@ -124,7 +127,7 @@ class Shell:
         """
         timestamp = datetime.datetime.now()
         try:
-            print("running command", command)
+            logger.info(f"Running command: {command}")
             process = subprocess.Popen(
                 ["/bin/bash", "-c", command],
                 stdout=subprocess.PIPE,

@@ -1,9 +1,12 @@
+import logging
 import os
 
 from PIL import Image
 
 from .code_editor_utils import apply_linter
 from .directory_utils import list_non_gitignore_files
+
+logger = logging.getLogger(__name__)
 
 
 class CodeEditor:
@@ -146,7 +149,7 @@ class CodeEditor:
                         results.extend(matches)
                         results.append("")  # Add a blank line between file results
             except Exception as e:
-                print(f"Error reading file {full_path}: {e}")
+                logger.error(f"Error reading file {full_path}: {e}")
 
         if not results:
             return "No files found."
@@ -165,7 +168,7 @@ class CodeEditor:
     #     test_result = subprocess.run(["pytest"], capture_output=True, text=True)
 
     #     if test_result.returncode != 0:
-    #         print("Tests failed. Please fix the issues before submitting.")
+    #         logger.error("Tests failed. Please fix the issues before submitting.")
     #         print(test_result.stdout)
     #         print(test_result.stderr)
     #         return
