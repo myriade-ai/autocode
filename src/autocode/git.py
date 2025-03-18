@@ -1,5 +1,6 @@
 import logging
 import subprocess
+from typing import Union
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,7 @@ class Git:
         """Get the status of the git repository."""
         return subprocess.run(["git", "status"], capture_output=True, text=True).stdout
 
-    def git_diff(self, path: str | None = None):
+    def git_diff(self, path: Union[str, None] = None):
         """Get the diff of the git repository."""
         if path:
             return subprocess.run(
