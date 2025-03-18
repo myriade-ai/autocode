@@ -1,6 +1,7 @@
 from autochat import Autochat
 
 from autocode.code_editor import CodeEditor
+from autocode.git import Git, PullRequest
 from autocode.render import render_url_and_return_screenshot
 from autocode.terminal import Terminal
 
@@ -53,3 +54,5 @@ agent.add_tool(terminal)
 code_editor = CodeEditor()
 agent.add_tool(code_editor)
 agent.add_function(render_url_and_return_screenshot)
+agent.add_function(Git)
+agent.add_function(PullRequest)

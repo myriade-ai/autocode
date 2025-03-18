@@ -7,7 +7,7 @@ from autocode.__main__ import agent
 
 logger = logging.getLogger(__name__)
 
-os.environ["AUTOCHAT_OUTPUT_SIZE_LIMIT"] = "10000"
+os.environ["AUTOCHAT_OUTPUT_SIZE_LIMIT"] = "10_000"
 
 
 def main():
