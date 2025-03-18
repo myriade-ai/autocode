@@ -43,6 +43,8 @@ file2.py
 # Test folders
 ignored_folder
 ignored_folder_with_slash/
+
+subdir/.env.dev
 """
     (tmp_path / ".gitignore").write_text(root_gitignore_content.strip())
 
@@ -183,3 +185,19 @@ def test_ignore_directory_in_sub_directory_exclusion(temp_directory):
 
     # Check that no files from __pycache__ directory are included
     assert not any(f.startswith("subdir/__pycache__") for f in rel_files)
+
+
+def test_follow_parent_gitignore(temp_directory):
+    """Test that parent .gitignore files are respected"""
+    dotenv_file = temp_directory / "subdir" / ".env.dev"
+    dotenv_file.write_text("SECRET=1234")
+
+    subdir = temp_directory / "subdir"
+
+    files = list_non_gitignore_files(str(subdir))
+
+    rel_files = [os.path.relpath(f, str(subdir)).replace(os.sep, "/") for f in files]
+    # Check that the parent file is included
+    assert ".env.dev" not in rel_files, (
+        "File should be ignored (follows parent .gitignore)"
+    )

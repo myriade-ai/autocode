@@ -39,9 +39,25 @@ def _read_gitignore(gitignore_path: str) -> list:
     return ignored_patterns
 
 
+def find_repository_root(directory: str) -> Path:
+    directory_path = Path(directory).resolve()
+    repo_root = directory_path
+    for _ in range(20):
+        if repo_root == Path("/"):
+            raise ValueError("Repository root not found")
+        if repo_root.joinpath(".git").exists():
+            return repo_root
+        repo_root = repo_root.parent
+    raise ValueError("Repository root not found")
+
+
 def list_non_gitignore_files(directory: str = ".") -> list:
     """List all files in the directory, excluding those in .gitignore, .git/, and .gitignore files themselves."""
     directory_path = Path(directory).resolve()
+    try:
+        repo_root = find_repository_root(directory_path)
+    except ValueError:
+        repo_root = directory_path
 
     def should_ignore(file_path: Path, gitignore_patterns: dict) -> bool:
         # Check against default ignore patterns first
@@ -64,7 +80,7 @@ def list_non_gitignore_files(directory: str = ".") -> list:
 
     # Collect all .gitignore files and their patterns
     gitignore_patterns = {}
-    for gitignore_file in directory_path.rglob(".gitignore"):
+    for gitignore_file in repo_root.rglob(".gitignore"):
         patterns = _read_gitignore(str(gitignore_file))
         gitignore_patterns[str(gitignore_file.parent)] = patterns
 
