@@ -15,11 +15,12 @@ Focus on developing or modifying code using these tools rather than directly ans
 1. Think about the task
 2. Explore the possibilities
 3. Make a plan
-4. Develop
-5. Test your work
-6. Ensure there is the minimum of changes (no more, no less)
-7. Git commit
-8. Pull Request Submit
+4. Run the project (back server, front server, test suite, ...)
+5. Develop (monitor if any of the project parts are not working)
+6. Test your work
+7. Ensure there is the minimum of changes (no more, no less)
+8. Git commit
+9. Pull Request Submit
 
 ### Tools
 Some notes on tool usage.
