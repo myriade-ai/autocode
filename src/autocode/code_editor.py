@@ -14,40 +14,64 @@ class CodeEditor:
         """Currently: display the directory of the code editor."""
         return "Directory:\n" + self.display_directory()
 
-    def read_file(self, filename: str, start_line: int = 1, end_line: int = None):
+    def read_file(self, path: str, start_line: int = 1, end_line: int = None):
         """Read a file with line numbers
         If the file is an image, return a base64-encoded image
         """
-        if filename.lower().endswith((".png", ".jpg", ".jpeg")):
-            return Image.open(filename)
+        if path.lower().endswith((".png", ".jpg", ".jpeg")):
+            return Image.open(path)
 
-        with open(filename, "r") as f:
+        with open(path, "r") as f:
             lines = f.read().splitlines()
 
         end_line = end_line or len(lines)
-        display = []
+        display = ["line number|line content", "---|---"]
         width = len(str(end_line))
+
         for i, line in enumerate(lines[start_line - 1 : end_line], start=start_line):
-            display.append(f"{str(i).rjust(width)} | {line}")
+            display.append(f"{str(i).rjust(width)}|{line}")
         return "\n".join(display)
 
-    def write_file(self, filename: str, content: str):
+    def _write_file(self, path: str, content: str):
         """Write the entire content to a file."""
-        with open(filename, "w") as f:
+        with open(path, "w") as f:
             f.write(content)
 
-        apply_linter(filename)
+        apply_linter(path)
 
-        with open(filename, "r") as f:
-            return f.read()
+        return self.read_file(path)
 
-    def delete_file(self, filename: str):
+    def create_file(self, path: str, content: str):
+        """Create a new file with the given content."""
+
+        # Work only if the file doesn't exist
+        if os.path.exists(path):
+            raise FileExistsError(f"File {path} already exists")
+
+        return self._write_file(path, content)
+
+    def delete_file(self, path: str):
         """Delete a file."""
-        os.remove(filename)
+        os.remove(path)
+
+    def str_replace(self, path: str, old_string: str, new_string: str) -> str:
+        """Replace all occurrences of 'old_string' with 'new_string' in the file.
+        Args:
+            path: The path to the file to edit.
+            old_string: The text to replace (must match exactly, including whitespace and indentation)
+            new_string: The new text to insert in place of the old text
+        Returns:
+            The content of the file after editing.
+        """
+        with open(path, "r") as f:
+            content = f.read()
+
+        content = content.replace(old_string, new_string)
+        return self._write_file(path, content)
 
     def edit_file(
         self,
-        filename: str,
+        path: str,
         line_index_start: int,
         delete_lines_count: int,
         insert_text: str = None,
@@ -55,19 +79,31 @@ class CodeEditor:
         """Delete a range of lines and insert text at the start line.
         Line numbers are 1-indexed.
         Args:
-            filename: The path to the file to edit.
+            path: The path to the file to edit.
             line_index_start: The line number to start deleting from.
             delete_lines_count: The number of lines to delete.
             insert_text: The text to insert at the start line.
         Returns:
             The content of the file after editing.
         """
-        with open(filename, "r") as f:
+        with open(path, "r") as f:
             lines = f.read().splitlines()
 
         # Convert line numbers to 0-indexed
         line_index_start -= 1
         line_index_end = line_index_start + delete_lines_count
+
+        # Safety checks
+        if delete_lines_count < 0:
+            raise ValueError("Delete lines count must be positive.")
+        if line_index_start < 0:
+            raise ValueError("Start line out of bounds.")
+        if line_index_end < 0:
+            raise ValueError("End line out of bounds.")
+        if line_index_start > len(lines):
+            raise ValueError("Start line out of bounds.")
+        if line_index_end > len(lines):
+            raise ValueError("End line out of bounds.")
 
         if insert_text:
             new_lines = (
@@ -77,15 +113,7 @@ class CodeEditor:
             new_lines = lines[:line_index_start] + lines[line_index_end:]
         new_content = "\n".join(new_lines)
 
-        # Write the changes to the file
-        with open(filename, "w") as f:
-            f.write(new_content)
-
-        # Apply linter after editing the file
-        apply_linter(filename)
-
-        with open(filename, "r") as f:
-            return f.read()
+        return self._write_file(path, new_content)
 
     def display_directory(self) -> str:
         """Display all the non-gitignored files in the directory."""
