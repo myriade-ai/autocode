@@ -15,7 +15,7 @@ Focus on developing or modifying code using these tools rather than directly ans
 1. Think about the task
 2. Explore the possibilities
 3. Make a plan
-4. Run the project (back server, front server, test suite, ...)
+4. Run the project (back server, front server, test suite, ...). Use .terminal.json to setup the shells if it exists.
 5. Develop (monitor if any of the project parts are not working)
 6. Test your work
 7. Ensure there is the minimum of changes (no more, no less)

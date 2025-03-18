@@ -1,5 +1,6 @@
 import datetime
 import fcntl
+import json
 import logging
 import os
 import subprocess
@@ -244,3 +245,25 @@ class Terminal:
         if name not in self.shells:
             raise ValueError(f"Shell {name} does not exist")
         del self.shells[name]
+
+    def save_bootstrap_config(self, config: dict[str, list[str]]):
+        """Save the bootstrap config in .terminal.json.
+        Args:
+            config: dict[str, list[str]], keys are shell names, values are lists of commands
+        """
+        with open(".terminal.json", "w") as f:
+            json.dump(config, f, indent=2)
+
+    def bootstrap_shells(self):
+        """Setup the shells based on the config file in .terminal.json."""
+        if not os.path.exists(".terminal.json"):
+            raise ValueError("No config file found")
+
+        with open(".terminal.json", "r") as f:
+            config = json.load(f)
+
+        for name, commands in config.items():
+            self.create_shell(name)
+            for command in commands:
+                self.shells[name].run_command(command)
+        return f"Boostrapped shells based on config:\n{config}"
