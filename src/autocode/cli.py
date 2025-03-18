@@ -1,6 +1,7 @@
 import logging
 import signal
 import sys
+import tempfile
 
 from autocode.__main__ import agent
 
@@ -36,7 +37,17 @@ def main():
 
             try:
                 for message in agent.run_conversation(prompt):
-                    print(message.to_terminal(display_image=True))
+                    text = message.to_terminal(display_image=True)
+                    if "number|line content" in text:
+                        # Save content in a temporary file
+                        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                            temp_file.write(text.encode("utf-8"))
+                            temp_file_path = temp_file.name
+                        print(
+                            f"### Assistant\nHiding file content (copied to {temp_file_path})"
+                        )
+                    else:
+                        print(text)
             except KeyboardInterrupt:
                 print("\nStopped the AI loop...")
                 # Give the user a chance to decide what to do next
