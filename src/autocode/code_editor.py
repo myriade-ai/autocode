@@ -9,6 +9,7 @@ from autocode.directory_utils import list_non_gitignore_files
 logger = logging.getLogger(__name__)
 
 output_size_limit = int(os.environ["AUTOCHAT_OUTPUT_SIZE_LIMIT"])
+FILE_DISPLAY_HEADERS = ["line number|line content", "---|---"]
 
 
 class CodeEditor:
@@ -47,7 +48,7 @@ class CodeEditor:
             lines = f.read().splitlines()
 
         end_line = end_line or len(lines)
-        display = ["line number|line content", "---|---"]
+        display = FILE_DISPLAY_HEADERS[:]
         width = len(str(end_line))
 
         for i, line in enumerate(lines[start_line - 1 : end_line], start=start_line):
@@ -86,6 +87,7 @@ class CodeEditor:
 
     def str_replace(self, path: str, old_string: str, new_string: str) -> str:
         """Replace all occurrences of 'old_string' with 'new_string' in the file.
+        If the file is not open, it will be opened and kept open.
         Args:
             path: The path to the file to edit.
             old_string: The text to replace (must match exactly, including whitespace and indentation)
@@ -93,8 +95,14 @@ class CodeEditor:
         Returns:
             The content of the file after editing.
         """
+        if path not in self.open_files:
+            self.open_files.add(path)
+
         with open(path, "r") as f:
             content = f.read()
+
+        if old_string not in content:
+            raise ValueError(f"Old string '{old_string}' not found in file '{path}'")
 
         content = content.replace(old_string, new_string)
         return self._write_file(path, content)
@@ -108,14 +116,19 @@ class CodeEditor:
     ) -> str:
         """Delete a range of lines and insert text at the start line.
         Line numbers are 1-indexed.
+        If the file is not open, it will be opened and kept open.
         Args:
             path: The path to the file to edit.
             line_index_start: The line number to start deleting from.
             delete_lines_count: The number of lines to delete.
             insert_text: The text to insert at the start line.
+            context_lines: The number of lines of context to include in the return
         Returns:
             The content of the file after editing.
         """
+        if path not in self.open_files:
+            self.open_files.add(path)
+
         with open(path, "r") as f:
             lines = f.read().splitlines()
 
@@ -128,12 +141,8 @@ class CodeEditor:
             raise ValueError("Delete lines count must be positive.")
         if line_index_start < 0:
             raise ValueError("Start line out of bounds.")
-        if line_index_end < 0:
-            raise ValueError("End line out of bounds.")
         if line_index_start > len(lines):
             raise ValueError("Start line out of bounds.")
-        if line_index_end > len(lines):
-            raise ValueError("End line out of bounds.")
 
         if insert_text:
             new_lines = (
@@ -143,7 +152,24 @@ class CodeEditor:
             new_lines = lines[:line_index_start] + lines[line_index_end:]
         new_content = "\n".join(new_lines)
 
-        return self._write_file(path, new_content)
+        # Write the full content to the file
+        content_display = self._write_file(path, new_content)
+
+        # Calculate the context window
+        CONTEXT_WINDOW_SURROUNDING_LINES = 4
+        start_context = len(FILE_DISPLAY_HEADERS) + max(
+            line_index_start - CONTEXT_WINDOW_SURROUNDING_LINES, 0
+        )
+        end_context = len(FILE_DISPLAY_HEADERS) + min(
+            line_index_start
+            + (len(insert_text.split("\n")) if insert_text else 0)
+            + CONTEXT_WINDOW_SURROUNDING_LINES,
+            len(content_display),
+        )
+        return "\n".join(
+            FILE_DISPLAY_HEADERS
+            + content_display.split("\n")[start_context:end_context]
+        )
 
     def display_directory(self) -> str:
         """Display all the non-gitignored files in the directory."""
