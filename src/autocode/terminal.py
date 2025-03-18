@@ -132,6 +132,7 @@ class Shell:
                 ["/bin/bash", "-c", command],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
                 text=True,
                 bufsize=1,  # Line buffered
                 universal_newlines=True,  # Ensures proper newline handling
@@ -153,6 +154,21 @@ class Shell:
             accumulated_output = []
 
             while True:
+                if time.time() - start_time > self.RETURN_TIMEOUT_SECONDS:
+                    print("Threading:", threading.enumerate())
+
+                    # Before timing out, try to get any buffered error output
+                    try:
+                        _, stderr = process.communicate(timeout=0.1)
+                        if stderr:
+                            accumulated_output.append(stderr)
+                    except subprocess.TimeoutExpired:
+                        pass
+
+                    output = "".join(accumulated_output)
+                    output += "\nCommand is still running..."
+                    self.history.append((timestamp, command, output))
+                    return output.strip()
                 try:
                     chunk = self.output_queue.get(timeout=0.1)
                     if chunk is None:  # Process has finished
@@ -172,19 +188,7 @@ class Shell:
 
                     accumulated_output.append(chunk)
                 except Empty:
-                    if time.time() - start_time > self.RETURN_TIMEOUT_SECONDS:
-                        # Before timing out, try to get any buffered error output
-                        try:
-                            _, stderr = process.communicate(timeout=0.1)
-                            if stderr:
-                                accumulated_output.append(stderr)
-                        except subprocess.TimeoutExpired:
-                            pass
-
-                        output = "".join(accumulated_output)
-                        output += "\nCommand is still running..."
-                        self.history.append((timestamp, command, output))
-                        return output.strip()
+                    pass
 
         except Exception as e:
             error_msg = str(e)

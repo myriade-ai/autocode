@@ -23,7 +23,7 @@ class TestEditFile:
     def test_edit_file_remove_lines_and_insert(self):
         # Call the edit_file function we defined above (or from your module)
         code_editor.edit_file(
-            filename=self.filename,
+            path=self.filename,
             line_index_start=2,
             delete_lines_count=2,
             insert_text="This is new line 2\nThis is new line 3",
