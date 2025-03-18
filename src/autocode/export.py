@@ -11,8 +11,11 @@ from pathlib import Path
 from autocode.directory_utils import list_non_gitignore_files
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
-LONG_FILE_THRESHOLD = 1_000
+LONG_FILE_THRESHOLD = 1_000  # A file with more than 1000 lines is considered long
+TOKEN_LIMIT_WARNING = 128_000  # Warning threshold for token count
+CHARS_PER_TOKEN = 4  # Approximation of characters per token
 
 
 def build_tree_structure(root_dir: Path, tracked_files: set):
@@ -74,6 +77,14 @@ def collect_files_content(root_dir: Path, tracked_files: set):
     return sorted(file_contents)
 
 
+def estimate_token_count(text: str) -> int:
+    """
+    Estimate the token count of a text using a simple character-based approximation.
+    Uses 4 characters per token as a rough approximation.
+    """
+    return len(text) // CHARS_PER_TOKEN
+
+
 def prepare_export(directory: str):
     """
     Prepare the export of a directory.
@@ -94,6 +105,16 @@ def prepare_export(directory: str):
         export += f"\n### file: {rel_path}\n"
         export += content
 
+    # Estimate token count
+    token_count = estimate_token_count(export)
+    logger.info(
+        f"--- Export Statistics ---\nCharacters: {len(export)}\nEstimated tokens: {token_count} (using {CHARS_PER_TOKEN} chars/token approximation)"
+    )
+
+    if token_count > TOKEN_LIMIT_WARNING:
+        logger.warning(
+            f"⚠️ WARNING: The export exceeds {TOKEN_LIMIT_WARNING:,} tokens (estimated {token_count:,}). This may be too large for some language models to process."
+        )
     return export
 
 
@@ -104,7 +125,8 @@ def main():
 
     clone_dir = sys.argv[1]
     export = prepare_export(clone_dir)
-    print(export)
+    with open(f"{clone_dir}.dump", "w") as f:
+        f.write(export)
 
 
 if __name__ == "__main__":

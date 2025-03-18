@@ -1,5 +1,9 @@
 import logging
+import os
 import sys
+
+# 10ks char = 250 lines => 2500 tokens
+os.environ["AUTOCHAT_OUTPUT_SIZE_LIMIT"] = "10_000"
 
 # Configure logging
 logging.basicConfig(

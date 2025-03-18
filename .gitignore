@@ -19,3 +19,5 @@ insights.txt
 *.egg-info/
 
 demo
+build
+*.dump

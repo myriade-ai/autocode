@@ -8,6 +8,8 @@ from .directory_utils import list_non_gitignore_files
 
 logger = logging.getLogger(__name__)
 
+output_size_limit = int(os.environ["AUTOCHAT_OUTPUT_SIZE_LIMIT"])
+
 
 class CodeEditor:
     def __init__(self, directory: str = "."):
@@ -18,9 +20,17 @@ class CodeEditor:
         return "Directory:\n" + self.display_directory()
 
     def read_file(self, path: str, start_line: int = 1, end_line: int = None):
-        """Read a file with line numbers
+        f"""Read a file with line numbers
         If the file is an image, return a base64-encoded image
+        The output is limited to {output_size_limit} characters
+        Args:
+            path: The path to the file to read.
+            start_line: The line number to start reading from (1-indexed).
+            end_line: The line number to end reading at (1-indexed).
+        Returns:
+            The content of the file with line numbers.
         """
+
         if path.lower().endswith((".png", ".jpg", ".jpeg")):
             return Image.open(path)
 
