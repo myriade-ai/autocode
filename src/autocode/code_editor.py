@@ -3,8 +3,8 @@ import os
 
 from PIL import Image
 
-from .code_editor_utils import apply_linter
-from .directory_utils import list_non_gitignore_files
+from autocode.code_editor_utils import apply_linter
+from autocode.directory_utils import list_non_gitignore_files
 
 logger = logging.getLogger(__name__)
 
@@ -14,15 +14,22 @@ output_size_limit = int(os.environ["AUTOCHAT_OUTPUT_SIZE_LIMIT"])
 class CodeEditor:
     def __init__(self, directory: str = "."):
         self.directory = directory
+        self.open_files = set()
 
     def __repr__(self):
         """Currently: display the directory of the code editor."""
-        return "Directory:\n" + self.display_directory()
+        context = "Directory:\n" + self.display_directory()
+        context += "\nOpen files:\n"
+        for path in self.open_files:
+            context += f"> {path}\n" + self.read_file(path)
+            context += "\n==========\n"
+        return context
 
     def read_file(self, path: str, start_line: int = 1, end_line: int = None):
         f"""Read a file with line numbers
         If the file is an image, return a base64-encoded image
         The output is limited to {output_size_limit} characters
+        Reading a file will open it (and keep it open)
         Args:
             path: The path to the file to read.
             start_line: The line number to start reading from (1-indexed).
@@ -30,6 +37,8 @@ class CodeEditor:
         Returns:
             The content of the file with line numbers.
         """
+        if path not in self.open_files:
+            self.open_files.add(path)
 
         if path.lower().endswith((".png", ".jpg", ".jpeg")):
             return Image.open(path)
@@ -44,6 +53,14 @@ class CodeEditor:
         for i, line in enumerate(lines[start_line - 1 : end_line], start=start_line):
             display.append(f"{str(i).rjust(width)}|{line}")
         return "\n".join(display)
+
+    def close_file(self, path: str):
+        """Close a file when it is no longer needed (for lighter context usage)"""
+        self.open_files.remove(path)
+
+    def close_all_files(self):
+        """Close all files"""
+        self.open_files.clear()
 
     def _write_file(self, path: str, content: str):
         """Write the entire content to a file."""
