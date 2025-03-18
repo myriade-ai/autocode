@@ -9,7 +9,7 @@ from pathlib import Path
 
 from autocode.directory_utils import list_non_gitignore_files
 
-LONG_FILE_THRESHOLD = 10_000
+LONG_FILE_THRESHOLD = 1_000
 
 
 def build_tree_structure(root_dir: Path, tracked_files: set):
@@ -47,15 +47,20 @@ def collect_files_content(root_dir: Path, tracked_files: set):
     """
     Recursively collect content of git-tracked files only.
     Shows "compiled - X lines" for long files.
+    Skips .lock files entirely.
     """
     file_contents = []
 
     for filepath in tracked_files:
+        # Skip .lock files entirely
+        if filepath.suffix == ".lock":
+            continue
+
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read()
                 line_count = len(content.splitlines())
-                if line_count > LONG_FILE_THRESHOLD or filepath.suffix == ".lock":
+                if line_count > LONG_FILE_THRESHOLD:
                     content = f"compiled - {line_count} lines"
             rel_path = filepath.relative_to(root_dir)
             file_contents.append((rel_path, content))
