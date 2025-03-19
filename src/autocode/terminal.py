@@ -266,4 +266,7 @@ class Terminal:
             self.create_shell(name)
             for command in commands:
                 self.shells[name].run_command(command)
-        return f"Boostrapped shells based on config:\n{config}"
+        logger.info(f"Boostrapped shells based on config:\n{config}")
+        created_shells = [s for s in self.shells if name in config]
+        logger.info(f"Created shells:\n{created_shells}")
+        return created_shells
