@@ -22,6 +22,14 @@ class TestHelloWorld(unittest.TestCase):
         reversed_hello_world = hello_world[::-1]
         self.assertEqual(reversed_hello_world, "dlrow olleh")
 
+    def test_hello_world_split(self):
+        """Test splitting hello world string into components"""
+        hello_world = "hello world"
+        split_result = hello_world.split()
+        self.assertEqual(len(split_result), 2)
+        self.assertEqual(split_result[0], "hello")
+        self.assertEqual(split_result[1], "world")
+
 
 if __name__ == "__main__":
     unittest.main()
