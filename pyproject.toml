@@ -27,3 +27,4 @@ dev = [
 [project.scripts]
 autocode = "autocode.cli:main"
 autocode-export = "autocode.export:main"
+autocode-dual = "autocode.dual_agent:main"
