@@ -22,6 +22,12 @@ class TestHelloWorld(unittest.TestCase):
         reversed_hello_world = hello_world[::-1]
         self.assertEqual(reversed_hello_world, "dlrow olleh")
 
+    def test_hello_world_uppercase(self):
+        """Test uppercase transformation for hello world"""
+        hello_world = "hello world"
+        uppercase_hello_world = hello_world.upper()
+        self.assertEqual(uppercase_hello_world, "HELLO WORLD")
+
 
 if __name__ == "__main__":
     unittest.main()
