@@ -21,3 +21,4 @@ insights.txt
 demo
 build
 *.dump
+*.env

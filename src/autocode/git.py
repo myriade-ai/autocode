@@ -14,33 +14,43 @@ logger = logging.getLogger(__name__)
 class Git:
     def __llm__(self):
         """Get the status of the git repository."""
-        return self.git_status()
+        return self.status()
 
-    # add condition so the function is deactivated if the user is not in "master" branch
-    def git_create_branch_and_checkout(self, name: str):
+    @staticmethod
+    def create_branch_and_checkout(name: str):
         """Create a new branch and checkout to it.
         If the name does not start with "autocode/", it will be added.
         """
-        if self.git_branch() != "master":
-            raise Exception("This function is only available in the master branch.")
+        # if self.branch() != "master":
+        # raise Exception("This function is only available in the master branch.")
         if not name.startswith("autocode/"):
             name = "autocode/" + name
         return subprocess.run(
             ["git", "checkout", "-b", name], capture_output=True, text=True
         ).stdout
 
-    def git_branch(self):
+    @staticmethod
+    def branch():
         """Get the current branch of the git repository."""
         result = subprocess.run(
             ["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True
         )
         return result.stdout.strip()
 
-    def git_status(self):
+    @staticmethod
+    def checkout(branch: str):
+        """Checkout a branch of the git repository."""
+        return subprocess.run(
+            ["git", "checkout", branch], capture_output=True, text=True
+        ).stdout
+
+    @staticmethod
+    def status():
         """Get the status of the git repository."""
         return subprocess.run(["git", "status"], capture_output=True, text=True).stdout
 
-    def git_diff(self, path: Union[str, None] = None):
+    @staticmethod
+    def diff(path: Union[str, None] = None):
         """Get the diff of the git repository."""
         if path:
             return subprocess.run(
@@ -51,25 +61,29 @@ class Git:
                 ["git", "diff"], capture_output=True, text=True
             ).stdout
 
-    def git_stage(self, path: str = "."):
+    @staticmethod
+    def stage(path: str = "."):
         """Stage the changes to the git repository."""
         return subprocess.run(
             ["git", "add", path], capture_output=True, text=True
         ).stdout
 
-    def git_unstage(self, path: str = "."):
+    @staticmethod
+    def unstage(path: str = "."):
         """Unstage the changes to the git repository."""
         return subprocess.run(
             ["git", "reset", "--", path], capture_output=True, text=True
         ).stdout
 
-    def git_commit(self, message):
+    @staticmethod
+    def commit(message):
         """Commit the changes to the git repository."""
         return subprocess.run(
             ["git", "commit", "-m", message], capture_output=True, text=True
         ).stdout
 
-    def git_push(self):
+    @staticmethod
+    def push():
         """Push the current branch to the remote repository."""
         return subprocess.run(["git", "push"], capture_output=True, text=True).stdout
 
@@ -82,7 +96,7 @@ class PullRequest:
         """Submit the current branch to the remote repository and create a GitHub pull request."""
         # First push the current branch
         push_result = subprocess.run(
-            ["git", "push", "--set-upstream", "origin", self.git.git_branch()],
+            ["git", "push", "--set-upstream", "origin", Git.branch()],
             capture_output=True,
             text=True,
         )
@@ -92,7 +106,7 @@ class PullRequest:
             return push_result.stderr
 
         # Get the current branch name and repo information
-        current_branch = self.git.git_branch()
+        current_branch = Git.branch()
 
         # Get the remote URL to determine GitHub repo details
         remote_url_result = subprocess.run(
