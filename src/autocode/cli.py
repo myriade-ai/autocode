@@ -35,14 +35,6 @@ def main():
                 print("Exiting conversation...")
                 break
 
-            response = agent.ask(
-                f"User prompt: {prompt}\n\n====\n\nCreate a new branch. Find a good name for the branch.",
-                tool_choice={
-                    "type": "tool",
-                    "name": "Git-Git__git_create_branch_and_checkout",
-                },
-            )
-            message = agent.handle_response(response)
             try:
                 for message in agent.run_conversation(prompt):
                     if message.name and "submit" in message.name:
