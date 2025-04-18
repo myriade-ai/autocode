@@ -3,7 +3,10 @@ import logging
 import os
 import re
 import subprocess
+from pathlib import Path
 from typing import Optional, Union
+
+from github import Github, GithubException
 
 logger = logging.getLogger(__name__)
 
@@ -113,41 +116,64 @@ class PullRequest:
         owner, repo = match.groups()
         repo = repo.rstrip(".git")
 
-        # Create pull request using GitHub CLI if available
-        if self._is_gh_cli_available():
+        # Try to get GitHub token from environment
+        github_token = os.environ.get("GITHUB_TOKEN")
+        if not github_token:
+            # Look for token in standard locations
+            token_paths = [
+                Path.home() / ".github" / "token",
+                Path.home() / ".config" / "gh" / "config.json",
+            ]
+
+            for path in token_paths:
+                if path.exists():
+                    if path.suffix == ".json":
+                        try:
+                            with open(path, "r") as f:
+                                config = json.load(f)
+                                # Extract token from GitHub CLI config
+                                if (
+                                    "hosts" in config
+                                    and "github.com" in config["hosts"]
+                                ):
+                                    oauth_token = config["hosts"]["github.com"].get(
+                                        "oauth_token"
+                                    )
+                                    if oauth_token:
+                                        github_token = oauth_token
+                                        break
+                        except (json.JSONDecodeError, KeyError) as e:
+                            logger.warning(
+                                f"Error reading GitHub config file {path}: {e}"
+                            )
+                    else:
+                        try:
+                            github_token = path.read_text().strip()
+                            break
+                        except Exception as e:
+                            logger.warning(f"Error reading token file {path}: {e}")
+
+        if not github_token:
+            return "Branch pushed but couldn't create PR: No GitHub token found. Set GITHUB_TOKEN environment variable."
+
+        try:
+            # Initialize PyGithub with token
+            g = Github(github_token)
+            github_repo = g.get_repo(f"{owner}/{repo}")
+
+            # Create PR
             pr_title = f"PR: {current_branch}"
             pr_body = f"Pull request for branch {current_branch}"
+            default_branch = github_repo.default_branch  # Usually "main" or "master"
 
-            pr_result = subprocess.run(
-                ["gh", "pr", "create", "--title", pr_title, "--body", pr_body],
-                capture_output=True,
-                text=True,
+            pr = github_repo.create_pull(
+                title=pr_title, body=pr_body, base=default_branch, head=current_branch
             )
 
-            if pr_result.returncode == 0:
-                # Extract PR URL from the output
-                match = re.search(r"(https://github\.com/[^\s]+)", pr_result.stdout)
-                if match:
-                    pr_url = match.group(1)
-                    return f"Pull request created successfully: {pr_url}"
-                return f"Pull request created successfully: {pr_result.stdout}"
-            else:
-                return f"Branch pushed but PR creation failed: {pr_result.stderr}"
-        else:
-            # Provide instructions if GitHub CLI is not available
-            pr_url = f"https://github.com/{owner}/{repo}/pull/new/{current_branch}"
-            return f"Branch pushed. Create PR manually at: {pr_url}"
-
-    def _is_gh_cli_available(self):
-        """Check if GitHub CLI is available in the system."""
-        try:
-            result = subprocess.run(
-                ["gh", "--version"],
-                capture_output=True,
-                text=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-            return result.returncode == 0
-        except FileNotFoundError:
-            return False
+            return f"Pull request created successfully: {pr.html_url}"
+        except GithubException as e:
+            logger.error(f"GitHub API error: {e}")
+            return f"Branch pushed but PR creation failed: {e}"
+        except Exception as e:
+            logger.error(f"Error creating PR: {e}")
+            return f"Branch pushed but PR creation failed: {e}"
