@@ -23,6 +23,12 @@ class Git:
             ["git", "checkout", "-b", name], capture_output=True, text=True
         ).stdout
 
+    def git_branch(self):
+        """Get the current branch."""
+        return subprocess.run(
+            ["git", "branch", "--show-current"], capture_output=True, text=True
+        ).stdout.strip()
+
     def git_status(self):
         """Get the status of the git repository."""
         return subprocess.run(["git", "status"], capture_output=True, text=True).stdout
