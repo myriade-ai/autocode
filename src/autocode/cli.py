@@ -6,7 +6,7 @@ import tempfile
 from autochat.model import Message
 
 from autocode.__main__ import agent
-from src.autocode.git import Git
+from autocode.git import Git
 
 logger = logging.getLogger(__name__)
 
