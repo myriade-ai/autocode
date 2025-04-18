@@ -10,14 +10,17 @@ class Git:
         """Get the status of the git repository."""
         return self.git_status()
 
-    def git_branch(self, name: str):
-        """Create a new branch.
+    # add condition so the function is deactivated if the user is not in "master" branch
+    def git_create_branch_and_checkout(self, name: str):
+        """Create a new branch and checkout to it.
         If the name does not start with "autocode/", it will be added.
         """
+        if self.git_branch() != "master":
+            raise Exception("This function is only available in the master branch.")
         if not name.startswith("autocode/"):
             name = "autocode/" + name
         return subprocess.run(
-            ["git", "branch", name], capture_output=True, text=True
+            ["git", "checkout", "-b", name], capture_output=True, text=True
         ).stdout
 
     def git_status(self):
