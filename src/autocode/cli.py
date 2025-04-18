@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_new_branch():
-    branch_name = "autocode-" + str(uuid.uuid4())
+    branch_name = "autocode/" + str(uuid.uuid4())
     git = Git()
     git.git_branch(branch_name)
 

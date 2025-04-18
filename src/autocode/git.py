@@ -11,7 +11,11 @@ class Git:
         return self.git_status()
 
     def git_branch(self, name: str):
-        """Create a new branch."""
+        """Create a new branch.
+        If the name does not start with "autocode/", it will be added.
+        """
+        if not name.startswith("autocode/"):
+            name = "autocode/" + name
         return subprocess.run(
             ["git", "branch", name], capture_output=True, text=True
         ).stdout
