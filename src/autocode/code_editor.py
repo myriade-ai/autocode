@@ -22,8 +22,14 @@ class CodeEditor:
         context = "Directory:\n" + self.display_directory()
         context += "\nOpen files:\n"
         for path in self.open_files:
-            context += f"> {path}\n" + self.read_file(path)
-            context += "\n==========\n"
+            try:
+                context += f"> {path}\n" + self.read_file(path)
+                context += "\n==========\n"
+            except Exception as e:
+                context += f"> {path}\n"
+                context += "File is not a text file\n"
+                context += "\n==========\n"
+                logger.error(f"Error reading file {path}: {e}")
         return context
 
     def read_file(self, path: str, start_line: int = 1, end_line: int = None):

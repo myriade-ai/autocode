@@ -2,10 +2,18 @@ import logging
 import signal
 import sys
 import tempfile
+import uuid
 
 from autocode.__main__ import agent
+from autocode.git import Git
 
 logger = logging.getLogger(__name__)
+
+
+def create_new_branch():
+    branch_name = "autocode-" + str(uuid.uuid4())
+    git = Git()
+    git.git_branch(branch_name)
 
 
 def main():
@@ -17,6 +25,7 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
 
     initial_prompt = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else None
+    create_new_branch()
     while True:
         try:
             if initial_prompt:
@@ -37,6 +46,9 @@ def main():
 
             try:
                 for message in agent.run_conversation(prompt):
+                    if "submit" in message.name:
+                        print("Code was submitted to the remote repository.")
+                        break
                     text = message.to_terminal(display_image=True)
                     if "number|line content" in text:
                         # Save content in a temporary file
@@ -59,4 +71,5 @@ def main():
 
 
 if __name__ == "__main__":
+    main()
     main()

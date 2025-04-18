@@ -10,6 +10,12 @@ class Git:
         """Get the status of the git repository."""
         return self.git_status()
 
+    def git_branch(self, name: str):
+        """Create a new branch."""
+        return subprocess.run(
+            ["git", "branch", name], capture_output=True, text=True
+        ).stdout
+
     def git_status(self):
         """Get the status of the git repository."""
         return subprocess.run(["git", "status"], capture_output=True, text=True).stdout
@@ -50,18 +56,5 @@ class Git:
 
 class PullRequest:
     def submit(self):
-        """
-        When the code is ready to be submitted, this function will:
-        1. Show the changes to be submitted
-        2. Ask the user for a review
-        """
-        # If tests pass, show changes and ask for review
-        diff = subprocess.run(["git", "diff"], capture_output=True, text=True).stdout
-        print("Changes to be submitted:")
-        print(diff)
-
-        user_input = input("Do you want to submit these changes? (y/n): ").lower()
-        if user_input == "y":
-            print("Changes have been pushed to branch: {branch_name}")
-        else:
-            print("Submission cancelled.")
+        """Submit the current branch to the remote repository."""
+        return subprocess.run(["git", "push"], capture_output=True, text=True).stdou
