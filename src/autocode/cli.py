@@ -46,7 +46,7 @@ def main():
 
             try:
                 for message in agent.run_conversation(prompt):
-                    if "submit" in message.name:
+                    if message.name and "submit" in message.name:
                         print("Code was submitted to the remote repository.")
                         break
                     text = message.to_terminal(display_image=True)
