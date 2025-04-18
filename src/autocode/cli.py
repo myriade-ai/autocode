@@ -36,7 +36,7 @@ def main():
                 break
 
             response = agent.ask(
-                "Create a new branch. Find a good name for the branch.",
+                f"User prompt: {prompt}\n\n====\n\nCreate a new branch. Find a good name for the branch.",
                 tool_choice={
                     "type": "tool",
                     "name": "Git-Git__git_create_branch_and_checkout",
