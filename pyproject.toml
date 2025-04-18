@@ -12,6 +12,7 @@ dependencies = [
     "autochat[all]",
     "pillow",
     "playwright",
+    "pygithub>=2.6.1",
 ]
 
 [tool.setuptools.packages.find]
