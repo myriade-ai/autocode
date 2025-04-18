@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 class Git:
-    def __repr__(self):
+    def __llm__(self):
         """Get the status of the git repository."""
         return self.git_status()
 
@@ -22,6 +22,13 @@ class Git:
         return subprocess.run(
             ["git", "checkout", "-b", name], capture_output=True, text=True
         ).stdout
+
+    def git_branch(self):
+        """Get the current branch of the git repository."""
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True
+        )
+        return result.stdout.strip()
 
     def git_status(self):
         """Get the status of the git repository."""
@@ -64,4 +71,4 @@ class Git:
 class PullRequest:
     def submit(self):
         """Submit the current branch to the remote repository."""
-        return subprocess.run(["git", "push"], capture_output=True, text=True).stdou
+        return subprocess.run(["git", "push"], capture_output=True, text=True).stdout

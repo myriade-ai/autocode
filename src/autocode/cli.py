@@ -47,7 +47,7 @@ def main():
                             temp_file.write(text.encode("utf-8"))
                             temp_file_path = temp_file.name
                         print(
-                            f"### Assistant\nHiding file content (copied to {temp_file_path})"
+                            f"## assistant\nHiding file content (copied to {temp_file_path})\n"
                         )
                     else:
                         print(text)

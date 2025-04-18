@@ -17,7 +17,7 @@ class CodeEditor:
         self.directory = directory
         self.open_files = set()
 
-    def __repr__(self):
+    def __llm__(self):
         """Currently: display the directory of the code editor."""
         context = "Directory:\n" + self.display_directory()
         context += "\nOpen files:\n"

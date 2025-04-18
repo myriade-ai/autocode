@@ -25,7 +25,7 @@ class Shell:
             5  # Maximum seconds to wait before returning partial output
         )
 
-    def __repr__(self):
+    def __llm__(self):
         """Display the command history and their outputs"""
         if not self.history:
             return "No commands executed yet"
