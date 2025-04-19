@@ -175,10 +175,59 @@ class PullRequest:
             g = Github(github_token)
             github_repo = g.get_repo(f"{owner}/{repo}")
 
-            # Create PR
+            # Determine default branch of remote repo (usually 'main' or 'master')
+            default_branch = github_repo.default_branch
+
+            # Build PR title and body
             pr_title = f"PR: {current_branch}"
-            pr_body = f"Pull request for branch {current_branch}"
-            default_branch = github_repo.default_branch  # Usually "main" or "master"
+
+            # Collect commit logs between base and head to provide an overview of the changes
+            try:
+                commit_logs = subprocess.run(
+                    [
+                        "git",
+                        "log",
+                        "--oneline",
+                        f"origin/{default_branch}..{current_branch}",
+                    ],
+                    capture_output=True,
+                    text=True,
+                ).stdout.strip()
+            except Exception as e:
+                logger.warning(f"Failed to get commit logs: {e}")
+                commit_logs = ""
+
+            # Collect diff between base and head (truncated to avoid hitting GitHub body limits)
+            try:
+                diff_output = subprocess.run(
+                    [
+                        "git",
+                        "diff",
+                        "--patch",
+                        f"origin/{default_branch}..{current_branch}",
+                    ],
+                    capture_output=True,
+                    text=True,
+                ).stdout
+                # GitHub body size limit is ~65k chars. Keep some margin.
+                MAX_BODY_LENGTH = 60000
+                if len(diff_output) > MAX_BODY_LENGTH:
+                    diff_output = (
+                        diff_output[:MAX_BODY_LENGTH] + "\n... (diff truncated)"
+                    )
+            except Exception as e:
+                logger.warning(f"Failed to get diff: {e}")
+                diff_output = ""
+
+            pr_body_parts = ["### Description of Changes"]
+            if commit_logs:
+                pr_body_parts.append(commit_logs)
+            if diff_output:
+                pr_body_parts.extend(
+                    ["", "### Diff", "", "```diff", diff_output, "```"]
+                )
+
+            pr_body = "\n".join(pr_body_parts)
 
             pr = github_repo.create_pull(
                 title=pr_title, body=pr_body, base=default_branch, head=current_branch
