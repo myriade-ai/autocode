@@ -62,8 +62,8 @@ Always verify that your actions and outputs align with manager instructions and 
 
 agent = Autochat(
     instruction=INSTRUCTION,
-    provider="anthropic",
-    model="claude-3-7-sonnet-latest",
+    provider="openai",
+    model="o3",
     name="Developer",
 )
 terminal = Terminal()
