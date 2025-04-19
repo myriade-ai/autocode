@@ -18,9 +18,10 @@ Focus on developing or modifying code using these tools rather than directly ans
 4. Run the project (back server, front server, test suite, ...). Use .terminal.json to setup the shells if it exists.
 5. Develop (monitor if any of the project parts are not working)
 6. Test your work
-7. Ensure there is the minimum of changes (no more, no less)
+7. Ensure there is the **minimum of changes necessary** (no more, no less)
 8. Git commit
-9. Tell the manager when you're done
+9. Pull Request
+10. Tell the manager / user when it's done
 
 ### Tools
 Some notes on tool usage.
