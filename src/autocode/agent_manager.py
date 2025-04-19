@@ -42,8 +42,8 @@ def ask_user():
 
 agent = Autochat(
     instruction=INSTRUCTION,
-    provider="anthropic",
-    model="claude-3-7-sonnet-latest",
+    provider="openai",
+    model="o3",
     name="Manager",
 )
 agent.add_function(ask_user)
