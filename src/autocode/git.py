@@ -92,9 +92,12 @@ class PullRequest:
     def __init__(self, git_instance: Optional[Git] = None):
         self.git = git_instance or Git()
 
-    def submit(self):
-        """Submit the current branch to the remote repository and create a GitHub pull request."""
-        # First push the current branch
+    def submit(self, description: str = ""):
+        """Submit the current branch to the remote repository and create a GitHub pull request.
+
+        Args:
+            description (str): A detailed description of the changes made in this PR.
+        """
         push_result = subprocess.run(
             ["git", "push", "--set-upstream", "origin", Git.branch()],
             capture_output=True,
@@ -174,12 +177,11 @@ class PullRequest:
             # Initialize PyGithub with token
             g = Github(github_token)
             github_repo = g.get_repo(f"{owner}/{repo}")
-
-            # Create PR
-            pr_title = f"PR: {current_branch}"
-            pr_body = f"Pull request for branch {current_branch}"
             default_branch = github_repo.default_branch  # Usually "main" or "master"
 
+            # Create PR with improved title and body
+            pr_title = f"PR: {current_branch}"
+            pr_body = description
             pr = github_repo.create_pull(
                 title=pr_title, body=pr_body, base=default_branch, head=current_branch
             )
