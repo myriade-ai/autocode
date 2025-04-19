@@ -2,6 +2,10 @@
 
 This project implements an AI agent equipped with a code editor and terminal capabilities, allowing it to perform coding tasks and execute shell commands.
 
+## Author
+
+ben
+
 ## Project Structure
 
 - `main.py`: The main script that initializes and runs the Autochat agent.
