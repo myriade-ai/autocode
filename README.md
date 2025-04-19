@@ -27,11 +27,35 @@ ben
 3. Install the required dependencies:
    ```
    pip install -r requirements.txt
-   ```
-
 ## Usage
 
-Run the main script:
+After installing the package (either from source with `pip install -e .` or from PyPI once published) the CLI entry‑points become available on your shell.
+
+### Start an interactive session
+
+```
+autocode "Your initial prompt here"
+```
+
+If you omit the prompt the program will ask for it and keep an interactive loop alive until you type `exit` / `quit` or press `Ctrl+C` twice.
+
+### Additional entry‑points
+
+The project exposes a few other convenience commands:
+
+```
+autocode-export        # run the exporter defined in autocode.export:main
+autocode-dual          # run the dual‑agent demo
+autocode-github-issue-server  # start the webhook micro‑service
+```
+
+If you prefer running the module directly you can still use the classic Python invocation:
+
+```
+python -m autocode.cli "Your prompt"
+```
+
+Or, for historical reasons, call the script that used to live at the repository root:
 
 ```
 python main.py
