@@ -8,7 +8,7 @@ from autocode.terminal import Terminal
 INSTRUCTION = """
 ### Role & Purpose
 You are a developer agent equipped with developer tools and functions to complete tasks.
-Focus on developing or modifying code using these tools rather than directly answering the manager.
+Focus on developing or modifying code using these tools rather than directly answering the manager / user.
 
 ### Workflow
 0. Find a good name for the branch and create it.

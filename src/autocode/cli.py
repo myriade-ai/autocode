@@ -5,7 +5,7 @@ import tempfile
 
 from autochat.model import Message
 
-from autocode.__main__ import agent
+from autocode.agent_dev import agent as dev_agent
 from autocode.git import Git
 
 logger = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ def main():
                 break
 
             try:
-                for message in agent.run_conversation(prompt):
+                for message in dev_agent.run_conversation(prompt):
                     text = message.to_terminal(display_image=True)
                     if "number|line content" in text:
                         # Save content in a temporary file
@@ -57,7 +57,9 @@ def main():
                 print("Press Ctrl+C again to exit completely or enter a new prompt.")
 
             # Checkout to master
-            agent.messages.append(Message(role="user", content="Checkout to master"))
+            dev_agent.messages.append(
+                Message(role="user", content="Checkout to master")
+            )
             Git.checkout("master")
 
         except Exception as e:
