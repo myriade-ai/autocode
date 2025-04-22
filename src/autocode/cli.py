@@ -11,6 +11,17 @@ from autocode.git import Git
 logger = logging.getLogger(__name__)
 
 
+def get_input_with_shift_enter():
+    """Get input from user, requiring Shift+Enter to submit."""
+    lines = []
+    while True:
+        line = input()
+        if not line:  # Empty line means Shift+Enter was pressed
+            break
+        lines.append(line)
+    return "\n".join(lines)
+
+
 def main():
     # Set up a signal handler for SIGINT (Ctrl+C)
     def signal_handler(sig, frame):
@@ -26,9 +37,10 @@ def main():
                 prompt = initial_prompt
                 initial_prompt = None
             else:
-                prompt = input(
-                    "Enter your prompt (Ctrl+C to exit, 'exit' or 'quit' to close): "
+                print(
+                    "Enter your prompt (Shift+Enter to submit, Ctrl+C to exit, 'exit' or 'quit' to close): "
                 )
+                prompt = get_input_with_shift_enter()
 
             if not prompt.strip():
                 print("Please provide a prompt")
