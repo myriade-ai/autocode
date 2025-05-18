@@ -22,6 +22,30 @@ def get_input_with_shift_enter():
     return "\n".join(lines)
 
 
+def check_git_status():
+    """Check if there are uncommitted changes and ask for user confirmation."""
+    status = Git.status()
+    if "nothing to commit" not in status:
+        print("\nThere are uncommitted changes in your repository.")
+        print("Do you want to continue? (y/N): ", end="")
+        response = input().lower()
+        if response != "y":
+            print("Exiting conversation...")
+            sys.exit(0)
+
+
+def check_git_branch():
+    """Check if current branch is not master and ask for user confirmation."""
+    current_branch = Git.branch()
+    if current_branch != "master":
+        print(f"\nYou are currently on branch '{current_branch}'.")
+        print("Do you want to continue? (y/N): ", end="")
+        response = input().lower()
+        if response != "y":
+            print("Exiting conversation...")
+            sys.exit(0)
+
+
 def main():
     # Set up a signal handler for SIGINT (Ctrl+C)
     def signal_handler(sig, frame):
@@ -33,6 +57,10 @@ def main():
     initial_prompt = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else None
     while True:
         try:
+            # Check git status and branch before proceeding
+            check_git_status()
+            check_git_branch()
+
             if initial_prompt:
                 prompt = initial_prompt
                 initial_prompt = None
