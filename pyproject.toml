@@ -29,3 +29,16 @@ autocode = "autocode.cli:main"
 autocode-export = "autocode.export:main"
 autocode-dual = "autocode.dual_agent:main"
 autocode-github-issue-server = "autocode.github_issue_server:main"
+
+[tool.semantic_release]
+version_source = "commit"
+version_toml = [
+    "pyproject.toml:project.version",
+]
+branch = "master"
+upload_to_pypi = false
+upload_to_release = true
+build_command = "pip install build && python -m build"
+changelog_file = "CHANGELOG.md"
+dist_path = "dist/"
+commit_message = "chore(release): bump version to {version}"
