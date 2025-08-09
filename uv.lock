@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.9"
 resolution-markers = [
     "python_full_version >= '3.10'",
@@ -59,15 +59,15 @@ wheels = [
 
 [[package]]
 name = "autochat"
-version = "0.18.2"
+version = "0.19.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pillow" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6c/39/83f582b0cb9eb1853cb621acc99f74d7c272369b9ced4d08936de7f978b3/autochat-0.18.2.tar.gz", hash = "sha256:f767d4431e739ca1c55f11a32663479f4b59aac7ebba35265aaeae5d02a6c8a6", size = 31794, upload-time = "2025-07-20T13:34:58.263Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5d/d7/f70facbb211c8b7f18d0ee7760349d97c0541f22658930603b0712325761/autochat-0.19.0.tar.gz", hash = "sha256:45bb5ada38a36ca5639167bf9cc067b1ae31b3e7325e1f6d08385d6aa9321d25", size = 31891, upload-time = "2025-07-28T14:56:48.571Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f5/f3/991f62f53e795479a1e94f7ad32ef2fda3d5367b4408ec591b96cb4e4387/autochat-0.18.2-py3-none-any.whl", hash = "sha256:10be020739e26713b66341c4cfd9cf1b4cd7473d94c22d53ac6aca1129329cd8", size = 27751, upload-time = "2025-07-20T13:34:56.744Z" },
+    { url = "https://files.pythonhosted.org/packages/78/e7/a70116abb265429b78e91465a64202f7c211796fc06c611171fb9f53cedd/autochat-0.19.0-py3-none-any.whl", hash = "sha256:0ce3dd96edf31beb80319b72437fb21a5f14527ee40eb7755b0de38e1960df25", size = 27902, upload-time = "2025-07-28T14:56:47.39Z" },
 ]
 
 [package.optional-dependencies]
@@ -96,7 +96,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "autochat", extras = ["all"], specifier = "==0.18.2" },
+    { name = "autochat", extras = ["all"], specifier = "==0.19.0" },
     { name = "pillow" },
     { name = "playwright" },
     { name = "pygithub", specifier = ">=2.6.1" },
