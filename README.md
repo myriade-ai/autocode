@@ -1,6 +1,10 @@
 # Autocode
 
-An AI development agent built with [autochat](../autochat/). Give it a task and it will autonomously code, test, and deploy using real development tools.
+An AI development agent built with [autochat](https://github.com/BenderV/autochat).
+
+Give it a task and it will autonomously code, test, and deploy using real development tools.
+
+Think about it as a simple Claude Code but for any LLM provider.
 
 ## What it does
 
