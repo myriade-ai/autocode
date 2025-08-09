@@ -9,7 +9,7 @@ description = "A library for auto-generating and managing code"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "autochat[all]",
+    "autochat[all]==0.18.2",
     "pillow",
     "playwright",
     "pygithub>=2.6.1",

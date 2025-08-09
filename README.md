@@ -1,83 +1,87 @@
-# Autochat Agent with Code Editor and Terminal
+# Autocode
 
-This project implements an AI agent equipped with a code editor and terminal capabilities, allowing it to perform coding tasks and execute shell commands.
+An AI development agent built with [autochat](../autochat/). Give it a task and it will autonomously code, test, and deploy using real development tools.
 
-## Author
+## What it does
 
-ben
-
-## Project Structure
-
-- `main.py`: The main script that initializes and runs the Autochat agent.
-- `src/autocode/`:
-  - `code_editor.py`: Implements the CodeEditor class.
-  - `terminal.py`: Implements the Terminal class.
-  - `code_editor_utils.py`: Utility functions for the code editor.
+- **Code Editor**: Read, write, edit files with syntax awareness
+- **Terminal**: Run commands, scripts, build tools, tests
+- **Git Operations**: Branch, commit, push, create PRs
+- **Web Rendering**: Take screenshots of web apps for testing
+- **Multi-Agent**: Coordinate multiple specialized agents
 
 ## Installation
 
-1. Ensure you have access to the private repository.
+```bash
+pip install -e .
+```
 
-2. Clone the repository (replace `<repository_url>` with the actual URL provided to you):
-   ```
-   git clone <repository_url>
-   cd <project_directory>
-   ```
+Requires:
 
-3. Install the required dependencies:
-   ```
-   pip install -r requirements.txt
+- Python 3.9+
+- OpenAI or Anthropic API key
+
 ## Usage
 
-After installing the package (either from source with `pip install -e .` or from PyPI once published) the CLI entry‑points become available on your shell.
+### Interactive Development Agent
 
-### Start an interactive session
+```bash
+# Start with a task
+autocode "Create a FastAPI app with user authentication"
 
+# Or start interactive mode
+autocode
+> Create a React component for file upload
+> Add unit tests
+> Deploy to Vercel
 ```
-autocode "Your initial prompt here"
-```
 
-If you omit the prompt the program will ask for it and keep an interactive loop alive until you type `exit` / `quit` or press `Ctrl+C` twice.
-
-### Additional entry‑points
+### Available Commands
 
 The project exposes a few other convenience commands:
 
-```
-autocode-export        # run the exporter defined in autocode.export:main
-autocode-dual          # run the dual‑agent demo
-autocode-github-issue-server  # start the webhook micro‑service
-```
-
-If you prefer running the module directly you can still use the classic Python invocation:
-
-```
-python -m autocode.cli "Your prompt"
+```bash
+autocode                    # Interactive agent
+autocode-dual              # Dual-agent collaboration demo
+autocode-export            # Export conversation history
+autocode-github-issue-server  # GitHub webhook server
 ```
 
-Or, for historical reasons, call the script that used to live at the repository root:
+## How it Works
 
+Built on [autochat](../autochat/), autocode gives AI agents access to real development tools:
+
+```python
+from autochat import Autochat
+from autocode.code_editor import CodeEditor
+from autocode.terminal import Terminal
+from autocode.git import Git
+
+agent = Autochat(
+    instruction="You are a senior developer...",
+    provider="anthropic",
+    model="claude-sonnet-4-20250514"
+)
+
+# Add development tools as classes
+agent.add_tool(CodeEditor(), "CodeEditor")
+agent.add_tool(Terminal(), "Terminal")
+agent.add_tool(Git(), "Git")
+
+# Agent now has full development capabilities
+agent.run_conversation("Build a web scraper with tests")
 ```
-python main.py
+
+## Configuration
+
+Choose your provider:
+
+```bash
+export AUTOCHAT_PROVIDER="anthropic"
+export ANTHROPIC_API_KEY="your-key"
 ```
 
-You can then interact with the agent by entering prompts. The agent can:
-
-- Open shell sessions to run commands
-- Edit code using the built-in code editor
-- Perform various coding tasks based on your instructions
-
-## Features
-
-- AI-powered agent using the Anthropic provider
-- Integrated terminal for running shell commands
-- Code editor for creating and modifying files
-- Ability to handle code transformations and development tasks
-
-## Contributing
-
-As this is a private repository, please contact the project maintainers for information on how to contribute or report issues.
-
-## License
-
-This project is proprietary and confidential. Unauthorized copying, transferring, or reproduction of the contents of this project, via any medium, is strictly prohibited.
+```bash
+export AUTOCHAT_PROVIDER="openai"
+export OPENAI_API_KEY="your-key"
+```

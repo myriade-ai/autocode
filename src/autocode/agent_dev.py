@@ -67,12 +67,15 @@ agent = Autochat(
     model="o3",
     name="Developer",
 )
-terminal = Terminal()
-agent.add_tool(terminal)
-code_editor = CodeEditor()
-agent.add_tool(code_editor)
-agent.add_function(render_url_and_return_screenshot)
-git = Git()
-agent.add_tool(git, "Git")
-pull_request = PullRequest()
-agent.add_tool(pull_request)
+
+
+def add_tools():
+    terminal = Terminal()
+    agent.add_tool(terminal)
+    code_editor = CodeEditor()
+    agent.add_tool(code_editor)
+    agent.add_function(render_url_and_return_screenshot)
+    git = Git()
+    agent.add_tool(git, "Git")
+    pull_request = PullRequest()
+    agent.add_tool(pull_request)

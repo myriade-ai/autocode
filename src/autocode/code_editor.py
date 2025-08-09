@@ -14,7 +14,7 @@ FILE_DISPLAY_HEADERS = ["line number|line content", "---|---"]
 
 class CodeEditor:
     def __init__(self, directory: str = "."):
-        self.directory = directory
+        self.directory = os.path.abspath(directory)
         self.open_files = set()
 
     def __llm__(self):
@@ -44,13 +44,14 @@ class CodeEditor:
         Returns:
             The content of the file with line numbers.
         """
-        if path not in self.open_files:
-            self.open_files.add(path)
+        abs_path = os.path.join(self.directory, path)
+        if abs_path not in self.open_files:
+            self.open_files.add(abs_path)
 
         if path.lower().endswith((".png", ".jpg", ".jpeg")):
-            return Image.open(path)
+            return Image.open(abs_path)
 
-        with open(path, "r") as f:
+        with open(abs_path, "r") as f:
             lines = f.read().splitlines()
 
         end_line = end_line or len(lines)
@@ -71,25 +72,29 @@ class CodeEditor:
 
     def _write_file(self, path: str, content: str):
         """Write the entire content to a file."""
-        with open(path, "w") as f:
+        abs_path = os.path.join(self.directory, path)
+        with open(abs_path, "w") as f:
             f.write(content)
 
-        apply_linter(path)
+        apply_linter(abs_path)
 
-        return self.read_file(path)
+        return self.read_file(abs_path)
 
     def create_file(self, path: str, content: str):
         """Create a new file with the given content."""
 
         # Work only if the file doesn't exist
-        if os.path.exists(path):
-            raise FileExistsError(f"File {path} already exists")
+        abs_path = os.path.join(self.directory, path)
+        if os.path.exists(abs_path):
+            raise FileExistsError(f"File {abs_path} already exists")
 
-        return self._write_file(path, content)
+        self._write_file(abs_path, content)
+        return "File created"
 
     def delete_file(self, path: str):
         """Delete a file."""
-        os.remove(path)
+        abs_path = os.path.join(self.directory, path)
+        os.remove(abs_path)
 
     def str_replace(self, path: str, old_string: str, new_string: str) -> str:
         """Replace all occurrences of 'old_string' with 'new_string' in the file.
@@ -101,17 +106,19 @@ class CodeEditor:
         Returns:
             The content of the file after editing.
         """
-        if path not in self.open_files:
-            self.open_files.add(path)
+        abs_path = os.path.join(self.directory, path)
+        if abs_path not in self.open_files:
+            self.open_files.add(abs_path)
 
-        with open(path, "r") as f:
+        with open(abs_path, "r") as f:
             content = f.read()
 
         if old_string not in content:
             raise ValueError(f"Old string '{old_string}' not found in file '{path}'")
 
         content = content.replace(old_string, new_string)
-        return self._write_file(path, content)
+        self._write_file(abs_path, content)
+        return "File edited"
 
     def edit_file(
         self,
@@ -132,10 +139,11 @@ class CodeEditor:
         Returns:
             The content of the file after editing.
         """
-        if path not in self.open_files:
-            self.open_files.add(path)
+        abs_path = os.path.join(self.directory, path)
+        if abs_path not in self.open_files:
+            self.open_files.add(abs_path)
 
-        with open(path, "r") as f:
+        with open(abs_path, "r") as f:
             lines = f.read().splitlines()
 
         # Convert line numbers to 0-indexed
@@ -188,9 +196,9 @@ class CodeEditor:
         results = []
 
         for path in files:
-            full_path = os.path.join(self.directory, path)
+            abs_path = os.path.join(self.directory, path)
             try:
-                with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+                with open(abs_path, "r", encoding="utf-8", errors="ignore") as f:
                     lines = f.readlines()
                     matches = []
                     for i, line in enumerate(lines, 1):
@@ -202,13 +210,11 @@ class CodeEditor:
                             matches.append(f"  Line {i}: {line_preview}")
 
                     if matches:
-                        results.append(
-                            f"> {os.path.relpath(full_path, self.directory)}"
-                        )
+                        results.append(f"> {os.path.relpath(abs_path, self.directory)}")
                         results.extend(matches)
                         results.append("")  # Add a blank line between file results
             except Exception as e:
-                logger.error(f"Error reading file {full_path}: {e}")
+                logger.error(f"Error reading file {abs_path}: {e}")
 
         if not results:
             return "No files found."
