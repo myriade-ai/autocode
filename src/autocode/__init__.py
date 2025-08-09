@@ -15,6 +15,7 @@ logging.basicConfig(
 # Silence some overly verbose loggers
 logging.getLogger("PIL").setLevel(logging.WARNING)
 
-from .code_editor import *
-from .code_editor_utils import *
-from .terminal import *
+
+from .code_editor import *  # noqa: E402, F403
+from .code_editor_utils import *  # noqa: E402, F403
+from .terminal import *  # noqa: E402, F403
